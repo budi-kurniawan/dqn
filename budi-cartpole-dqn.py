@@ -8,6 +8,10 @@ import torch
 from dqn_agent import DQNAgent
 import os
 
+
+"""
+Setting amsgrad=True in the AdamW optimizer makes the results reproducible and better.
+"""
 os.system('cls' if os.name == 'nt' else 'clear')
 is_ipython = 'inline' in matplotlib.get_backend()
 if is_ipython:
