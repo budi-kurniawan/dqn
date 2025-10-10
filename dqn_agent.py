@@ -29,7 +29,7 @@ class DQNAgent:
         self._policy_net = DQN(n_observations, n_actions).to(device)
         self._target_net = DQN(n_observations, n_actions).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
-        self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR)
+        self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
         self._memory = ReplayMemory(10000)
         self._steps_done = 0
 
@@ -48,7 +48,7 @@ class DQNAgent:
         else:
             return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long)
             #random_action = np.random.randint(0, self._n_actions, dtype=np.int64)
-            return torch.tensor([[random_action]], device=self._device, dtype=torch.long)
+            #return torch.tensor([[random_action]], device=self._device, dtype=torch.long)
 
 
     def update(self, state, action, next_state, reward, terminated, truncated):
