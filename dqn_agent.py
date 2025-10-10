@@ -10,7 +10,7 @@ from dqn import DQN
 from replay_memory import ReplayMemory, Transition
 
 
-BATCH_SIZE = 2 #128
+BATCH_SIZE = 128
 GAMMA = 0.99
 EPS_START = 0.9
 EPS_END = 0.01
@@ -69,6 +69,7 @@ class DQNAgent:
         policy_net_state_dict = self._policy_net.state_dict()
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+        #print("target_net_state_dict: ", target_net_state_dict)
         self._target_net.load_state_dict(target_net_state_dict)
     
     def optimize_model(self):
@@ -89,15 +90,15 @@ class DQNAgent:
         # (a final state would've been the one after which simulation ended)
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                             batch.next_state)), device=self._device, dtype=torch.bool)
+        # non_final_mask.shape = Size([128]) of bools
         non_final_next_states = torch.cat([s for s in batch.next_state
                                                     if s is not None])
+        # non_final_next_states.shape = shape([x, 4]), x <= BATCH_SIZE
         state_batch = torch.cat(batch.state) # convert a tuple (batch.state) to torch.Tensor
         action_batch = torch.cat(batch.action)
         reward_batch = torch.cat(batch.reward)
 
         #print("state_batch.size:", state_batch.shape, ", nstate shape:", non_final_next_states.shape)
-
-
         # print("batch.state:", len(batch.state)) # a tuple, len() = 128
         # print("state_batch:", state_batch.shape) # a torch.Tensor Size([128, 4])
         
@@ -108,8 +109,6 @@ class DQNAgent:
         state_action_values = policy_net(state_batch).gather(1, action_batch)
 
         #print("batch.next_state:", batch.next_state)
-        #print("non_final_mask:", non_final_mask.shape) # Size([128])
-        # print("non_final_n_states:", non_final_next_states.shape) # shape([x, 4]), x <= BATCH_SIZE
         # print("\n\n")
 
         # Compute V(s_{t+1}) for all next states.
@@ -143,3 +142,9 @@ class DQNAgent:
         # In-place gradient clipping
         torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
         optimizer.step()
+
+    def get_policy_net(self):
+        return self._policy_net
+    
+    def get_target_net(self):
+        return self._target_net

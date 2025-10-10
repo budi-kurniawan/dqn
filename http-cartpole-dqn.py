@@ -12,6 +12,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from httpcartpole import HttpCartpoleEnv
+from replay_memory import Transition, ReplayMemory
+
 env = HttpCartpoleEnv()
 
 # set up matplotlib
@@ -46,25 +48,6 @@ env.observation_space.seed(seed)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(seed)
 
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
-
-
-class ReplayMemory(object):
-
-    def __init__(self, capacity):
-        self.memory = deque([], maxlen=capacity)
-
-    def push(self, *args):
-        """Save a transition"""
-        self.memory.append(Transition(*args))
-
-    def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
-
-    def __len__(self):
-        return len(self.memory)
-    
 class DQN(nn.Module):
 
     def __init__(self, n_observations, n_actions):

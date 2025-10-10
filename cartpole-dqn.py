@@ -223,16 +223,7 @@ for i_episode in range(num_episodes):
     for t in count():
         action = select_action(state)
         observation, reward, terminated, truncated, _ = env.step(action.item())
-
-        x, x_dot, theta, theta_dot = observation
-        max_x = max_x if x < max_x else x
-        max_x_dot = max_x_dot if x_dot < max_x_dot else x_dot
-        max_theta = max_theta if theta < max_theta else theta
-        max_theta_dot = max_theta_dot if theta_dot < max_theta_dot else theta_dot
-
-
         reward = torch.tensor([reward], device=device)
-        done = terminated or truncated
 
         if terminated:
             next_state = None
@@ -241,9 +232,6 @@ for i_episode in range(num_episodes):
 
         # Store the transition in memory
         memory.push(state, action, next_state, reward)
-
-        # Move to the next state
-        state = next_state
 
         # Perform one step of the optimization (on the policy network)
         optimize_model()
@@ -256,13 +244,14 @@ for i_episode in range(num_episodes):
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
         target_net.load_state_dict(target_net_state_dict)
 
-        if done:
+        # Move to the next state
+        state = next_state
+        if terminated or truncated:
             episode_durations.append(t + 1)
             print("episode ", i_episode, ", reward: ", t)
             plot_durations()
             break
 
-print('Complete, (max x, x_dot, theta, theta_dot):', max_x, max_x_dot, max_theta, max_theta_dot)
 plot_durations(show_result=True)
 plt.ioff()
 plt.show()
