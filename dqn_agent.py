@@ -22,15 +22,12 @@ LR = 3e-4
 class DQNAgent:
     criterion = nn.SmoothL1Loss()
 
-    def __init__(self, n_observations, n_actions):
-        self._device = torch.device(
-            "cuda" if torch.cuda.is_available() else
-            "mps" if torch.backends.mps.is_available() else
-            "cpu"
-        )
+    def __init__(self, n_observations, n_actions, env, device):
+        self._env = env
+        self._device = device
         self._n_actions = n_actions
-        self._policy_net = DQN(n_observations, n_actions).to(self._device)
-        self._target_net = DQN(n_observations, n_actions).to(self._device)
+        self._policy_net = DQN(n_observations, n_actions).to(device)
+        self._target_net = DQN(n_observations, n_actions).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR)
         self._memory = ReplayMemory(10000)
@@ -49,8 +46,8 @@ class DQNAgent:
                 # found, so we pick action with the larger expected reward.
                 return self._policy_net(state).max(1).indices.view(1, 1)
         else:
-            # return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long)
-            random_action = np.random.randint(0, self._n_actions, dtype=np.int64)
+            return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long)
+            #random_action = np.random.randint(0, self._n_actions, dtype=np.int64)
             return torch.tensor([[random_action]], device=self._device, dtype=torch.long)
 
 
