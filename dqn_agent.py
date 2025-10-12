@@ -36,10 +36,10 @@ class DQNAgent:
 
 
     def select_action(self, state):
-        self._steps_done += 1
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * \
             math.exp(-1. * self._steps_done / EPS_DECAY)
+        self._steps_done += 1
         if sample > eps_threshold:
             with torch.no_grad():
                 # t.max(1) will return the largest column value of each row.
@@ -67,7 +67,6 @@ class DQNAgent:
         policy_net_state_dict = self._policy_net.state_dict()
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
-        #print("target_net_state_dict: ", target_net_state_dict)
         self._target_net.load_state_dict(target_net_state_dict)
     
     def optimize_model(self):

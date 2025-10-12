@@ -44,21 +44,6 @@ def plot_durations(episode_durations, show_result=False):
             display.display(plt.gcf())
 
 def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device, draw_chart: bool = False):
-    # random.seed(seed)
-    # torch.manual_seed(seed)
-    # env.reset(seed=seed)
-    # env.action_space.seed(seed)
-    # env.observation_space.seed(seed)
-
-    # if torch.cuda.is_available():
-    #     torch.cuda.manual_seed(seed)
-    
-    n_actions = env.action_space.n
-    state, info = env.reset()
-    n_observations = len(state)
-    print("dqn learning v1.30")
-
-    #dqn_agent = DQNAgent(n_observations, n_actions)
     episode_durations = []
 
     for i_episode in range(num_episodes):
@@ -67,16 +52,16 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device, draw_chart: 
         for t in count():
             action = dqn_agent.select_action(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
-            next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
             reward = torch.tensor([reward], device=device)
+            next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
-            state = next_state
             if terminated or truncated:
                 episode_durations.append(t + 1)
                 print("episode ", i_episode, ", reward: ", t)
                 if draw_chart:
                     plot_durations(episode_durations)
                 break
+            state = next_state
     if draw_chart:
         plot_durations(episode_durations, True)
         plt.ioff()
@@ -92,10 +77,6 @@ if __name__ == "__main__":
     )
     seed = 42
     env = gym.make("CartPole-v1")
-    num_episodes = 500
-    n_observations = 4
-    n_actions = 2
-    # set seed before creating agent
     random.seed(seed)
     torch.manual_seed(seed)
     env.reset(seed=seed)
@@ -103,6 +84,10 @@ if __name__ == "__main__":
     env.observation_space.seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
+    n_actions = env.action_space.n
+    state, info = env.reset()
+    n_observations = len(state) #4
+    num_episodes = 500
     dqn_agent = DQNAgent(n_observations, n_actions, env, device)
     draw_chart = True
     train_dqn(env, dqn_agent, num_episodes, seed, device, draw_chart)

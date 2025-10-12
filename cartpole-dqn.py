@@ -13,8 +13,6 @@ import torch.nn.functional as F
 from dqn import DQN
 from replay_memory import Transition, ReplayMemory
 
-env = gym.make("CartPole-v1")
-
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
 if is_ipython:
@@ -39,6 +37,7 @@ device = torch.device(
 
 
 seed = 42
+env = gym.make("CartPole-v1")
 random.seed(seed)
 torch.manual_seed(seed)
 env.reset(seed=seed)
@@ -68,9 +67,7 @@ LR = 3e-4
 n_actions = env.action_space.n
 # Get the number of state observations
 state, info = env.reset()
-n_observations = len(state)
-print("n_observations:", n_observations)
-
+n_observations = len(state) #4
 policy_net = DQN(n_observations, n_actions).to(device)
 target_net = DQN(n_observations, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
@@ -98,6 +95,7 @@ def select_action(state):
         return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long)
 
 
+criterion = nn.SmoothL1Loss()
 episode_durations = []
 
 
@@ -162,7 +160,6 @@ def optimize_model():
     expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
     # Compute Huber loss
-    criterion = nn.SmoothL1Loss()
     loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
 
     # Optimize the model
@@ -178,11 +175,6 @@ else:
     num_episodes = 500
 
 print("num_episode:", num_episodes)
-
-max_x = 0
-max_x_dot = 0
-max_theta = 0
-max_theta_dot = 0
 
 for i_episode in range(num_episodes):
     # Initialize the environment and get its state
@@ -212,18 +204,13 @@ for i_episode in range(num_episodes):
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
         target_net.load_state_dict(target_net_state_dict)
 
-        # Move to the next state
-        state = next_state
         if terminated or truncated:
             episode_durations.append(t + 1)
             print("episode ", i_episode, ", reward: ", t)
             plot_durations()
             break
+        state = next_state
 
 plot_durations(show_result=True)
 plt.ioff()
 plt.show()
-
-
-# if __name__ == "__main__":
-#     print("start")
