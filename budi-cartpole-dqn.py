@@ -7,6 +7,7 @@ from itertools import count
 import torch
 from dqn_agent import DQNAgent
 import os
+import time
 
 
 """
@@ -57,7 +58,7 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device, draw_chart: 
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
             if terminated or truncated:
                 episode_durations.append(t + 1)
-                print("episode ", i_episode, ", reward: ", t)
+                print("episode ", i_episode, ", reward: ", t + 1)
                 if draw_chart:
                     plot_durations(episode_durations)
                 break
@@ -65,7 +66,8 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device, draw_chart: 
     if draw_chart:
         plot_durations(episode_durations, True)
         plt.ioff()
-        plt.show()        
+        plt.show()
+    return episode_durations      
 
 
 if __name__ == "__main__":
@@ -75,6 +77,7 @@ if __name__ == "__main__":
         "mps" if torch.backends.mps.is_available() else
         "cpu"
     )
+    device = torch.device("cpu")
     seed = 42
     env = gym.make("CartPole-v1")
     random.seed(seed)
@@ -89,5 +92,14 @@ if __name__ == "__main__":
     n_observations = len(state) #4
     num_episodes = 500
     dqn_agent = DQNAgent(n_observations, n_actions, env, device)
-    draw_chart = True
-    train_dqn(env, dqn_agent, num_episodes, seed, device, draw_chart)
+    draw_chart = False
+    
+
+    print("device:", device)
+    start = time.time()
+
+    results = train_dqn(env, dqn_agent, num_episodes, seed, device, draw_chart)
+
+    end = time.time()
+    print("Total rewards:", sum(results))
+    print(f"Execution time: {end - start:.4f} seconds")
