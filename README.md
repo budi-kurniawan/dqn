@@ -13,3 +13,7 @@
 
 Installing All Dependencies 
     pip install -r requirements.txt
+
+
+Installing dependencies for the user (to avoid using venv):
+    pip install --user --break-system-packages gymnasium matplotlib torch
