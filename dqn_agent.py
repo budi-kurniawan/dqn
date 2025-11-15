@@ -87,48 +87,35 @@ class DQNAgent:
         # (a final state would've been the one after which simulation ended)
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                             batch.next_state)), device=self._device, dtype=torch.bool)
-        # non_final_mask.shape = Size([128]) of bools
-        non_final_next_states = torch.cat([s for s in batch.next_state
-                                                    if s is not None])
-        # non_final_next_states.shape = shape([x, 4]), x <= BATCH_SIZE
-        state_batch = torch.cat(batch.state) # convert a tuple (batch.state) to torch.Tensor
-        action_batch = torch.cat(batch.action)
-        reward_batch = torch.cat(batch.reward)
+        # non_final_mask.shape = Size(128) of bools
+        non_final_next_states = torch.cat([s for s in batch.next_state 
+                                           if s is not None]) #shape([x, 4]), x <= BATCH_SIZE
 
-        #print("state_batch.size:", state_batch.shape, ", nstate shape:", non_final_next_states.shape)
-        # print("batch.state:", len(batch.state)) # a tuple, len() = 128
-        # print("state_batch:", state_batch.shape) # a torch.Tensor Size([128, 4])
-        
+        #converts tuples of len(BATCH_SIZE) to Tensors
+        state_batch = torch.cat(batch.state) #Shape(BATCH_SIZE, n_observations)
+        action_batch = torch.cat(batch.action) #Shape(BATCH_SIZE, 1)
+        reward_batch = torch.cat(batch.reward) #Shape(BATCH_SIZE)
+
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
-        state_action_values = policy_net(state_batch).gather(1, action_batch)
-
-        #print("batch.next_state:", batch.next_state)
-        # print("\n\n")
+        state_action_values = policy_net(state_batch).gather(1, action_batch) #shape(BATCH_SIZE, 1)
+        # policy_net(state_batch) shape(BATCH_SIZE, n_actions)
 
         # Compute V(s_{t+1}) for all next states.
         # Expected values of actions for non_final_next_states are computed based
         # on the "older" target_net; selecting their best reward with max(1).values
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
-        next_state_values = torch.zeros(BATCH_SIZE, device=self._device)
+        next_state_values = torch.zeros(BATCH_SIZE, device=self._device) #shape(BATCH_SIZE)
         with torch.no_grad():
             next_state_values[non_final_mask] = target_net(non_final_next_states).max(1).values
             # non_final_next_states.size = next_state_values.size - non_final_mask(False)
             # so, next_state_values[x] = 0.00 where non_final_mask[x] = False
         # Compute the expected Q values
-        expected_state_action_values = (next_state_values * GAMMA) + reward_batch
+        expected_state_action_values = (next_state_values * GAMMA) + reward_batch #shape(BATCH_SIZE)
 
-        # print("state_batch:", state_batch)
-        # print("action_batch:", action_batch)
-        # print('Q(state_batch):', policy_net(state_batch))
-        # print('state_action_values:', state_action_values)
-        # print("next_state_values:", next_state_values)
-        # print("reward_batch:", reward_batch)
-        # print("expected_state_action_values:", expected_state_action_values)
-        # print('\n')
 
         # Compute Huber loss
         loss = DQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
