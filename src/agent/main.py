@@ -6,7 +6,7 @@ from itertools import count
 
 import torch
 
-from agent.dqn.dqn_agent import DQNAgent
+from agent.fastdqn.dqn_agent import DQNAgent
 import os
 import time
 
@@ -53,6 +53,7 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device, draw_chart: 
         for t in count():
             action = dqn_agent.select_action(state)
             next_state, reward, terminated, truncated, _ = env.step(action)
+            # next_state = numpy.ndarray, reward: float
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
             if terminated or truncated:
                 episode_durations.append(t + 1)
@@ -75,7 +76,7 @@ if __name__ == "__main__":
         "mps" if torch.backends.mps.is_available() else
         "cpu"
     )
-    #device = torch.device("cpu")
+    device = torch.device("cpu")
     seed = 42
     env = gym.make("CartPole-v1")
     random.seed(seed)
