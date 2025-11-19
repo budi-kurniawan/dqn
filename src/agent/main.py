@@ -49,13 +49,10 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device, draw_chart: 
     episode_durations = []
 
     for i_episode in range(num_episodes):
-        observation, info = env.reset() # observation is tuple [4]
-        state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0) #state tensor [1,4]
+        state, _ = env.reset() # observation is tuple [4]
         for t in count():
             action = dqn_agent.select_action(state)
-            observation, reward, terminated, truncated, _ = env.step(action.item())
-            reward = torch.tensor([reward], device=device)
-            next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
+            next_state, reward, terminated, truncated, _ = env.step(action)
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
             if terminated or truncated:
                 episode_durations.append(t + 1)
@@ -78,7 +75,7 @@ if __name__ == "__main__":
         "mps" if torch.backends.mps.is_available() else
         "cpu"
     )
-    device = torch.device("cpu")
+    #device = torch.device("cpu")
     seed = 42
     env = gym.make("CartPole-v1")
     random.seed(seed)

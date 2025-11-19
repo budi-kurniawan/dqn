@@ -33,7 +33,8 @@ class DQNAgent:
         self._steps_done = 0
 
 
-    def select_action(self, state):
+    def select_action(self, observation):
+        state = torch.tensor(observation, dtype=torch.float32, device=self._device).unsqueeze(0) #state tensor [1,4]
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * \
             math.exp(-1. * self._steps_done / EPS_DECAY)
@@ -43,14 +44,18 @@ class DQNAgent:
                 # t.max(1) will return the largest column value of each row.
                 # second column on max result is index of where max element was
                 # found, so we pick action with the larger expected reward.
-                return self._policy_net(state).max(1).indices.view(1, 1)
+                return self._policy_net(state).max(1).indices.view(1, 1).item()
         else:
-            return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long)
+            return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long).item()
             #random_action = np.random.randint(0, self._n_actions, dtype=np.int64)
             #return torch.tensor([[random_action]], device=self._device, dtype=torch.long)
 
 
     def update(self, state, action, next_state, reward, terminated, truncated):
+        state = torch.tensor(state, dtype=torch.float32, device=self._device).unsqueeze(0)
+        reward = torch.tensor([reward], device=self._device)
+        next_state = torch.tensor(next_state, dtype=torch.float32, device=self._device).unsqueeze(0)
+        action = torch.tensor([action], dtype=torch.int32, device=self._device)
         if terminated:
             self._memory.push(state, action, None, reward)
         else:
@@ -91,7 +96,7 @@ class DQNAgent:
 
         #converts tuples of len(BATCH_SIZE) to Tensors
         state_batch = torch.cat(batch.state) #Shape(BATCH_SIZE, n_observations)
-        action_batch = torch.cat(batch.action) #Shape(BATCH_SIZE, 1)
+        action_batch = torch.cat(batch.action).unsqueeze(1) #Shape(BATCH_SIZE, 1)
         reward_batch = torch.cat(batch.reward) #Shape(BATCH_SIZE)
 
 
