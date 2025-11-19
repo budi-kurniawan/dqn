@@ -76,7 +76,7 @@ if __name__ == "__main__":
         "mps" if torch.backends.mps.is_available() else
         "cpu"
     )
-    device = torch.device("cpu")
+    #device = torch.device("cpu")
     seed = 42
     env = gym.make("CartPole-v1")
     random.seed(seed)
