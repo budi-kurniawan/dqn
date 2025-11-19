@@ -5,7 +5,8 @@ import random
 from itertools import count
 
 import torch
-from dqn_agent import DQNAgent
+
+from agent.dqn.dqn_agent import DQNAgent
 import os
 import time
 

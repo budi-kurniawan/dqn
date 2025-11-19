@@ -17,3 +17,9 @@ Installing All Dependencies
 
 Installing dependencies for the user (to avoid using venv):
     pip install --user --break-system-packages gymnasium matplotlib torch
+
+# Running the App
+Make sure you have a pyproject.toml
+From the project root, run
+    pip install -e .
+    python -m agent.main

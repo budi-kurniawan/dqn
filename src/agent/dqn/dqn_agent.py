@@ -4,10 +4,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 import random
 import math
-import numpy as np
-
-from dqn import DQN
-from replay_memory import ReplayMemory, Transition
+from agent.dqn.dqn import DQN
+from agent.dqn.replay_memory import ReplayMemory, Transition
 
 
 BATCH_SIZE = 128
