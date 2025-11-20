@@ -6,7 +6,7 @@ from itertools import count
 
 import torch
 
-from agent.fastdqn.dqn_agent import DQNAgent
+from agent.dqn2.dqn_agent import DQNAgent
 import os
 import time
 
