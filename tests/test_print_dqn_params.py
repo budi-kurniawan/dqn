@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-from nn_util import save_params_as_torchscript, save_params_as_onnx
+from util.nn_util import save_params_as_torchscript, save_params_as_onnx
 from dqn import DQN
 from dqn_agent import DQNAgent
 import numpy as np

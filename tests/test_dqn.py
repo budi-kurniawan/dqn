@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-from nn_util import save_params_as_torchscript
+from util.nn_util import save_params_as_torchscript
 from dqn import DQN
 
 class TestMainMethods(unittest.TestCase):
