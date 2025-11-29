@@ -32,11 +32,13 @@ class TestPrintDQNParams(unittest.TestCase):
         # print(row)
         print("--------------")
 
-        for i in range(200):
-            t = torch.full((1, 11), i)
+        for i in range(80):
+            t = torch.full((12,), 0.0 + i)
+            t[-1] = 1.0
             replay_memory.push(t)
 
         row = replay_memory.sample(3)
+        print("===== row:")
         print(row)
 
 
