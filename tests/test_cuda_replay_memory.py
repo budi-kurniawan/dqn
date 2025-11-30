@@ -6,6 +6,7 @@ import unittest
 import torch
 import torch.nn as nn
 from agent.cudadqn.replay_memory import ReplayMemory
+from env.cartpole.cartpole import Cartpole
 import random
 
 
@@ -40,6 +41,17 @@ class TestPrintDQNParams(unittest.TestCase):
         row = replay_memory.sample(3)
         print("===== row:")
         print(row)
+
+
+        print("device:", device)
+        seed = 42
+
+        cartpole = Cartpole(seed, device)
+        state = cartpole.reset()
+        action = torch.tensor(1)
+        cartpole.apply_action(action)
+        state = cartpole.get_state()
+        print('state:', state)
 
 
 

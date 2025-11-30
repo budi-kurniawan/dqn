@@ -6,7 +6,7 @@ class ReplayMemory(object):
     def __init__(self, device: torch.device, capacity: int) -> None:
         self._device = device
         # self.capacity can probably be just an int
-        self._capacity = capacity #torch.tensor(capacity, dtype=torch.int32, device=device)
+        self._capacity = capacity # must be int to keep sample() GPU-safe
         length = 4 + 1 + 4 + 1 + 1 + 1 # state, action, next_state, reward, terminated, my FLAG
         self._pointer = torch.tensor(0, dtype=torch.int32, device=device)
         self._size = torch.tensor(0, dtype=torch.int32, device=device)
