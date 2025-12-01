@@ -3,7 +3,7 @@ from itertools import count
 
 import torch
 
-from agent.dqn.dqn_agent import DQNAgent
+from agent.cudadqn.cuda_dqn_agent import CudaDQNAgent
 from env.cartpole.cartpole_env import CartpoleEnv
 import os
 import time
@@ -14,16 +14,10 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device):
     episode_durations = []
 
     for i_episode in range(num_episodes):
-        state = env.reset().cpu().numpy().tolist() # observation is tuple [4]
+        state = env.reset()
         for t in count():
             action = dqn_agent.select_action(state)
-            action = torch.tensor(action, device=device, dtype=torch.int32)
-
-            response = env.step(action)
-            next_state = response[0:4].cpu().numpy().tolist()
-            reward = response[4].item()
-            terminated = response[5].item()
-            truncated = response[6].item()
+            next_state, reward, terminated, truncated = env.step(action)
 
             # next_state = numpy.ndarray, reward: float
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
@@ -55,7 +49,7 @@ if __name__ == "__main__":
     state = env.reset()
     n_observations = len(state) #4
     num_episodes = 500
-    dqn_agent = DQNAgent(n_observations, n_actions, env, device)
+    dqn_agent = CudaDQNAgent(n_observations, n_actions, env, device)
     
 
     print("device:", device)

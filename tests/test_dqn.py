@@ -1,11 +1,14 @@
 import unittest
+import sys
+import io
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
 from util.nn_util import save_params_as_torchscript
-from dqn import DQN
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+from agent.dqn.dqn import DQN
 
 class TestMainMethods(unittest.TestCase):
     def test_dqn(self):

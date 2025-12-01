@@ -2,11 +2,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import random
-import math
+from torch import Tensor
 import numpy as np
 from agent.cudadqn.dqn import DQN
-from agent.cudadqn.replay_memory import ReplayMemory
+from agent.cudadqn.cuda_replay_memory import CudaReplayMemory
 
 
 BATCH_SIZE = 128
@@ -18,7 +17,7 @@ TAU = 0.005
 LR = 3e-4
 
 
-class DQNAgent:
+class CudaDQNAgent:
     criterion = nn.SmoothL1Loss()
 
     def __init__(self, n_observations, n_actions, env, device):
@@ -31,32 +30,31 @@ class DQNAgent:
         self._target_net.load_state_dict(self._policy_net.state_dict())
         # with seed 42, setting amsgrad=True improves the results and make it reproducible
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
-        self._memory = ReplayMemory(device, 10000, BATCH_SIZE)
-        self._steps_done = 0
+        self._memory = CudaReplayMemory(device, 10000)
+        self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
 
 
-    def select_action(self, observation):
-        state = torch.tensor(observation, dtype=torch.float, device=self._device).unsqueeze(0) #state tensor [1,4]
-        sample = random.random()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-            math.exp(-1. * self._steps_done / EPS_DECAY)
-        self._steps_done += 1
-        if sample > eps_threshold:
-            with torch.no_grad():
-                # t.max(1) will return the largest column value of each row.
-                # second column on max result is index of where max element was
-                # found, so we pick action with the larger expected reward.
-                return self._policy_net(state).max(1).indices.view(1, 1).item()
-        else:
-            return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long).item()
+    def select_action(self, state: Tensor):
+        state = state.unsqueeze(0) # convert shape(4) to (1,4)
+        #sample = random.random()
+        sample = torch.rand(1, device=self._device).squeeze() #shape([])
+        # eps_threshold = EPS_END + (EPS_START - EPS_END) * \
+        #     math.exp(-1. * self._steps_done / EPS_DECAY)
+        exponent_term = torch.exp(-1. * self._steps_done / EPS_DECAY)
+        eps_threshold = EPS_END + (EPS_START - EPS_END) * exponent_term # shape([])
+        self._steps_done.add_(1)
+        with torch.no_grad():
+            greedy_action = self._policy_net(state).max(1).indices.view(1, 1)
+        random_action = self._env.action_space.sample().view(1, 1)
+        return torch.where(sample > eps_threshold, greedy_action, random_action)
 
 
-    def update(self, state: np.ndarray, action: int, next_state: np.ndarray, reward: float, 
-               terminated: bool, truncated: bool):
-        if terminated:
-            self._memory.push(state, action, None, reward, terminated)
-        else:
-            self._memory.push(state, action, next_state, reward, terminated)
+    def update(self, state: Tensor, action: Tensor, next_state: Tensor, reward: Tensor, 
+               terminated_float: Tensor, truncated_float: Tensor):
+        memory = self._memory
+        memory.push(state, action, next_state, reward, terminated_float)
+        if memory._size < BATCH_SIZE:
+            return
 
         self.optimize_model()
 
@@ -70,39 +68,24 @@ class DQNAgent:
     
     def optimize_model(self):
         memory = self._memory
-        if len(memory) < BATCH_SIZE:
-            return
         policy_net = self._policy_net
         target_net = self._target_net
         optimizer = self._optimizer
 
         transitions = memory.sample(BATCH_SIZE)
-
-        states = np.zeros((BATCH_SIZE, self._n_observations), dtype=np.float32)
-        next_states = np.zeros((BATCH_SIZE, self._n_observations), dtype=np.float32)
-        actions = np.zeros((BATCH_SIZE, 1), dtype=int)
-        rewards = np.zeros((BATCH_SIZE), dtype=np.float32)
-        terminals = np.zeros((BATCH_SIZE), dtype=bool)
-
-        for i, transition in enumerate(transitions):
-            states[i] = transition.state
-            next_states[i] = transition.next_state
-            actions[i] = transition.action
-            rewards[i] = transition.reward
-            terminals[i] = transition.terminal
-
-        states_tensor = torch.from_numpy(states).to(self._device)
-        next_states_tensor = torch.from_numpy(next_states).to(self._device)
-        actions_tensor = torch.from_numpy(actions).to(self._device)
-        rewards_tensor = torch.from_numpy(rewards).to(self._device)
-        terminals_tensor = torch.from_numpy(terminals).to(self._device)
+        states_tensor = transitions[: , 0:4]
+        actions_tensor = transitions[: , 4]
+        next_states_tensor = transitions[: , 5:9]
+        rewards_tensor = transitions[: , 9]
+        terminals_float_tensor = transitions[: , 10]
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
         state_action_values = policy_net(states_tensor).gather(1, actions_tensor) #shape(BATCH_SIZE, 1)
         next_state_values = target_net(next_states_tensor).max(1).values #shape(BATCH_SIZE)
-        nz = terminals_tensor.nonzero(as_tuple=False)
+
+        nz = terminals_float_tensor.nonzero(as_tuple=False)
         nz_size = nz.size()
         if nz_size[0] == 1:
             row_indices = nz[0]
@@ -114,7 +97,7 @@ class DQNAgent:
         expected_state_action_values = (next_state_values * GAMMA) + rewards_tensor #shape(BATCH_SIZE)
 
         # Compute Huber loss
-        loss = DQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss = CudaDQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         optimizer.zero_grad()

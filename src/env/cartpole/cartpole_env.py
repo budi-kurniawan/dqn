@@ -9,7 +9,7 @@ class CartpoleEnv:
     MAX_STEPS = 500
 
     def __init__(self, seed: int, device: torch.device):
-        self.action_space = CustomDiscrete(2)
+        self.action_space = CustomDiscrete(2, device)
         self._cartpole = Cartpole(seed, device)
         self._one_tensor = torch.tensor(1.0, device=device)
         self._max_steps_tensor = torch.tensor(CartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
@@ -40,7 +40,7 @@ class CartpoleEnv:
         terminated_float = terminated_float.view(1)
 
         truncated = (self._steps_done >= self._max_steps_tensor).float().view(1)
-        return torch.cat((state, reward, terminated_float, truncated), dim=0)
+        return state, reward, terminated_float, truncated
 
 
 

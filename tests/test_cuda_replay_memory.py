@@ -5,7 +5,7 @@ import unittest
 
 import torch
 import torch.nn as nn
-from agent.cudadqn.replay_memory import ReplayMemory
+from agent.cudadqn.cuda_replay_memory import CudaReplayMemory
 from env.cartpole.cartpole import Cartpole
 import random
 
@@ -25,7 +25,7 @@ class TestPrintDQNParams(unittest.TestCase):
         #random.seed(seed)
         #torch.manual_seed(seed)
 
-        replay_memory = ReplayMemory(device, capacity)
+        replay_memory = CudaReplayMemory(device, capacity)
         # replay_memory.push(torch.ones((11)))
         # print("size:", replay_memory.size)
 
