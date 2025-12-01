@@ -53,8 +53,11 @@ class Cartpole:
         denom = self._LENGTH * (self._FOUR_THIRDS - self._MASS_POLE * cos_theta.pow(2) / self._TOTAL_MASS)
         theta_acc = (self._G * sin_theta - cos_theta * temp) / denom
         x_acc = temp - self._POLEMASS_LENGTH * theta_acc * cos_theta / self._TOTAL_MASS
-        self._state[0] += self._TAU * x_dot     # x += TAU * x_dot
-        self._state[1] += self._TAU * x_acc     # x_dot += TAU * x_acc
-        self._state[2] += self._TAU * theta_dot # theta += TAU * theta_dot
-        self._state[3] += self._TAU * theta_acc # theta_dot += TAU * theta_acc
+
+        # self._state[0] += self._TAU * x_dot     # x += TAU * x_dot
+        # self._state[1] += self._TAU * x_acc     # x_dot += TAU * x_acc
+        # self._state[2] += self._TAU * theta_dot # theta += TAU * theta_dot
+        # self._state[3] += self._TAU * theta_acc # theta_dot += TAU * theta_acc
+        derivatives = torch.stack((x_dot, x_acc.squeeze().squeeze(), theta_dot, theta_acc.squeeze().squeeze()))
+        self._state.add_(self._TAU * derivatives)
         return self._state

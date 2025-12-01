@@ -44,9 +44,9 @@ class CudaDQNAgent:
         eps_threshold = EPS_END + (EPS_START - EPS_END) * exponent_term # shape([])
         self._steps_done.add_(1)
         with torch.no_grad():
-            greedy_action = self._policy_net(state).max(1).indices.view(1, 1)
-        random_action = self._env.action_space.sample().view(1, 1)
-        return torch.where(sample > eps_threshold, greedy_action, random_action)
+            greedy_action = self._policy_net(state).max(1).indices #shape(1)
+        random_action = self._env.action_space.sample() #shape(1)
+        return torch.where(sample > eps_threshold, greedy_action, random_action).flatten()
 
 
     def update(self, state: Tensor, action: Tensor, next_state: Tensor, reward: Tensor, 

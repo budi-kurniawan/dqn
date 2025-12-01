@@ -11,7 +11,7 @@ class CudaReplayMemory(object):
         self._pointer = torch.tensor(0, dtype=torch.int32, device=device)
         self._size = torch.tensor(0, dtype=torch.int32, device=device)
         self._memory = torch.zeros((capacity, length), dtype=torch.float32, device=device) 
-        self._flag = torch.tensor(1.0, device=device, dtype=torch.float32)
+        self._flag = torch.tensor([1.0], device=device, dtype=torch.float32)
 
     def push(self, state, action, next_state, reward, terminated_float) -> None:
         # flag is used in sample()
