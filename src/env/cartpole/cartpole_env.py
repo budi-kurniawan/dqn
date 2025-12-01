@@ -1,20 +1,24 @@
 import torch
 from torch import Tensor, device
-from env.cartpole.cartpole import Cartpole
+from env.cartpole.cartpole import Cartpole, X_THRESHOLD, THETA_THRESHOLD
+from env.cartpole.custom_discrete import CustomDiscrete
 
 class CartpoleEnv:
+    
 
     MAX_STEPS = 500
 
     def __init__(self, seed: int, device: torch.device):
+        self.action_space = CustomDiscrete(2)
         self._cartpole = Cartpole(seed, device)
         self._one_tensor = torch.tensor(1.0, device=device)
+        self._max_steps_tensor = torch.tensor(CartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
-        self._X_THRESHOLD_TENSOR = torch.tensor(Cartpole.X_THRESHOLD, device=device)
-        self._THETA_THRESHOLD_TENSOR = torch.tensor(Cartpole.THETA_THRESHOLD, device=device)
+        self._X_THRESHOLD_TENSOR = torch.tensor(X_THRESHOLD, device=device)
+        self._THETA_THRESHOLD_TENSOR = torch.tensor(THETA_THRESHOLD, device=device)
 
 
-    def reset(self) -> Tensor:
+    def reset(self, seed=42) -> Tensor:
         self._steps_done.zero_()
         return self._cartpole.reset()
 
@@ -34,7 +38,9 @@ class CartpoleEnv:
         # reward = 1 if not terminated, 0 if terminated
         reward = (self._one_tensor - terminated_float).view(1)
         terminated_float = terminated_float.view(1)
-        return torch.cat((state, reward, terminated_float), dim=0)
+
+        truncated = (self._steps_done >= self._max_steps_tensor).float().view(1)
+        return torch.cat((state, reward, terminated_float, truncated), dim=0)
 
 
 

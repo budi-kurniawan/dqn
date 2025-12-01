@@ -1,10 +1,10 @@
-import gymnasium as gym
 import random
 from itertools import count
 
 import torch
 
-from agent.cudadqn.dqn_agent import DQNAgent
+from agent.dqn.dqn_agent import DQNAgent
+from env.cartpole.cartpole_env import CartpoleEnv
 import os
 import time
 
@@ -14,10 +14,17 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device):
     episode_durations = []
 
     for i_episode in range(num_episodes):
-        state, _ = env.reset() # observation is tuple [4]
+        state = env.reset().cpu().numpy().tolist() # observation is tuple [4]
         for t in count():
             action = dqn_agent.select_action(state)
-            next_state, reward, terminated, truncated, _ = env.step(action)
+            action = torch.tensor(action, device=device, dtype=torch.int32)
+
+            response = env.step(action)
+            next_state = response[0:4].cpu().numpy().tolist()
+            reward = response[4].item()
+            terminated = response[5].item()
+            truncated = response[6].item()
+
             # next_state = numpy.ndarray, reward: float
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
             if terminated or truncated:
@@ -36,18 +43,18 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 42
-    env = gym.make("CartPole-v1")
+    env = CartpoleEnv(seed, device)
     random.seed(seed)
     torch.manual_seed(seed)
     env.reset(seed=seed)
-    env.action_space.seed(seed)
-    env.observation_space.seed(seed)
+    # env.action_space.seed(seed)
+    # env.observation_space.seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
-    n_actions = env.action_space.n
-    state, info = env.reset()
+    n_actions = 2 #env.action_space.n
+    state = env.reset()
     n_observations = len(state) #4
-    num_episodes = 50
+    num_episodes = 500
     dqn_agent = DQNAgent(n_observations, n_actions, env, device)
     
 
