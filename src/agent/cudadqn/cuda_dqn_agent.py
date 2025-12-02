@@ -79,7 +79,7 @@ class CudaDQNAgent:
         terminals_float_tensor = transitions[: , 10]
 
 
-        print("transitions:", transitions.shape)
+        #print("transitions:", transitions.shape)
         #print("states_tensor:", states_tensor)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the

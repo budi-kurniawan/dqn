@@ -12,8 +12,8 @@ class CustomDiscrete:
             n (int): The number of possible actions (0, 1, ..., n-1).
         """
         self._device = device
-        self._n = n
+        self.n = n
         self.space = torch.arange(n, device=device)
 
     def sample(self):
-        return torch.randint(low=0, high=self._n, size=(1,), device=self._device)
+        return torch.randint(low=0, high=self.n, size=(1,), device=self._device)
