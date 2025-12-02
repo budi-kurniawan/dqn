@@ -55,7 +55,6 @@ class CudaDQNAgent:
         memory.push(state, action, next_state, reward, terminated_float)
         if memory._size < BATCH_SIZE:
             return
-
         self.optimize_model()
 
         # Soft update of the target network's weights
@@ -74,10 +73,14 @@ class CudaDQNAgent:
 
         transitions = memory.sample(BATCH_SIZE)
         states_tensor = transitions[: , 0:4]
-        actions_tensor = transitions[: , 4]
+        actions_tensor = transitions[: , 4].int().unsqueeze(1) # convert to ints and make the shape the same as states
         next_states_tensor = transitions[: , 5:9]
         rewards_tensor = transitions[: , 9]
         terminals_float_tensor = transitions[: , 10]
+
+
+        print("transitions:", transitions.shape)
+        #print("states_tensor:", states_tensor)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken

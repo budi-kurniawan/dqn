@@ -26,7 +26,7 @@ class CudaReplayMemory(object):
     def sample(self, batch_size):
         gpu_indices = torch.randint(
             low=0, 
-            high=self._capacity,
+            high=self._size.item(), #self._capacity,
             size=(batch_size,), 
             device=self._device, 
             dtype=torch.long
