@@ -4,7 +4,7 @@ from itertools import count
 
 import torch
 
-from agent.dqn2.dqn_agent import DQNAgent
+from agent.dqn.dqn_agent import DQNAgent
 from util.plot_util import plot_timesteps
 import os
 import time
@@ -23,7 +23,7 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device):
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
             if terminated or truncated:
                 episode_durations.append(t + 1)
-                print("episode ", i_episode, ", reward: ", t + 1)
+                print("episode ", i_episode + 1, ", reward: ", t + 1)
                 break
             state = next_state
     return episode_durations      
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     n_actions = env.action_space.n
     state, info = env.reset()
     n_observations = len(state) #4
-    num_episodes = 50
+    num_episodes = 500
     dqn_agent = DQNAgent(n_observations, n_actions, env, device)
     
 
