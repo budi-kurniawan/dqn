@@ -4,7 +4,7 @@ from itertools import count
 
 import torch
 
-from agent.dqn.dqn_agent import DQNAgent
+from agent.dqn2.dqn_agent import DQNAgent
 from util.plot_util import plot_timesteps
 import os
 import time

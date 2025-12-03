@@ -24,16 +24,16 @@ class CudaReplayMemory(object):
 
 
     def sample(self, batch_size):
-        gpu_indices = torch.randint(
-            low=0, 
-            high=self._size.item(), #self._capacity,
-            size=(batch_size,), 
-            device=self._device, 
-            dtype=torch.long
-        )
+        # randint() does not guarantee uniqueness
+        # gpu_indices = torch.randint(low=0, high=self._size.item(), #self._capacity,
+        #     size=(batch_size,), device=self._device, 
+        #     dtype=torch.long) # not unique!
+        # mask = sampled_data[:, -1] != 0
+        # return sampled_data[mask]
+
+        gpu_indices = torch.randperm(self._size)[:batch_size]
         sampled_data = self._memory[gpu_indices] # may include zeros when _memory not full yet
-        mask = sampled_data[:, -1] != 0
-        return sampled_data[mask]
+        return sampled_data
     
     def size(self):
         return self._size

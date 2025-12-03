@@ -4,7 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch import Tensor
 import numpy as np
-from agent.cudadqn.dqn import DQN
+from agent.dqn.dqn import DQN
 from agent.cudadqn.cuda_replay_memory import CudaReplayMemory
 
 
@@ -53,8 +53,7 @@ class CudaDQNAgent:
                terminated_float: Tensor, truncated_float: Tensor):
         memory = self._memory
         memory.push(state, action, next_state, reward, terminated_float)
-        if memory._size < BATCH_SIZE:
-            return
+
         self.optimize_model()
 
         # Soft update of the target network's weights
@@ -67,36 +66,46 @@ class CudaDQNAgent:
     
     def optimize_model(self):
         memory = self._memory
+        if memory._size < BATCH_SIZE:
+            return
         policy_net = self._policy_net
         target_net = self._target_net
         optimizer = self._optimizer
 
-        transitions = memory.sample(BATCH_SIZE)
-        states_tensor = transitions[: , 0:4]
-        actions_tensor = transitions[: , 4].int().unsqueeze(1) # convert to ints and make the shape the same as states
-        next_states_tensor = transitions[: , 5:9]
-        rewards_tensor = transitions[: , 9]
-        terminals_float_tensor = transitions[: , 10]
+        transitions = memory.sample(BATCH_SIZE) #shape(BATCH_SIZE, 12)
+        states_tensor = transitions[: , 0:4] #shape(BATCH_SIZE, 4)
+        actions_tensor = transitions[: , 4].int().unsqueeze(1) #shape(BATCH_SIZE, 1) 
+        next_states_tensor = transitions[: , 5:9] #shape(BATCH_SIZE, 4)
+        rewards_tensor = transitions[: , 9] #shape(BATCH_SIZE)
+        terminals_float_tensor = transitions[: , 10] #shape(BATCH_SIZE)
 
-
-        #print("transitions:", transitions.shape)
-        #print("states_tensor:", states_tensor)
+        non_final_mask = (1 - terminals_float_tensor).bool()       # non_final_mask.shape = Size(128) of bools
+        non_final_next_states = next_states_tensor[non_final_mask] #shape([x, 4]), x <= BATCH_SIZE
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
         state_action_values = policy_net(states_tensor).gather(1, actions_tensor) #shape(BATCH_SIZE, 1)
-        next_state_values = target_net(next_states_tensor).max(1).values #shape(BATCH_SIZE)
 
-        nz = terminals_float_tensor.nonzero(as_tuple=False)
-        nz_size = nz.size()
-        if nz_size[0] == 1:
-            row_indices = nz[0]
-        else:
-            row_indices = nz.squeeze()
 
-        zeros_tensor = torch.zeros(nz_size[0], dtype=torch.float32, device=self._device)
-        next_state_values.index_put_((row_indices,), zeros_tensor)
+        # next_state_values = target_net(next_states_tensor).max(1).values #shape(BATCH_SIZE)
+        # terminals_bool_tensor = terminals_float_tensor != 0
+        # nz = terminals_bool_tensor.nonzero(as_tuple=False)
+        # nz_size = nz.size()
+        # if nz_size[0] == 1:
+        #     row_indices = nz[0]
+        # else:
+        #     row_indices = nz.squeeze()
+
+        # zeros_tensor = torch.zeros(nz_size[0], dtype=torch.float32, device=self._device)
+        # next_state_values.index_put_((row_indices,), zeros_tensor)
+
+
+
+        next_state_values = torch.zeros(BATCH_SIZE, device=self._device) #shape(BATCH_SIZE)
+        with torch.no_grad():
+            next_state_values[non_final_mask] = target_net(non_final_next_states).max(1).values
+
         expected_state_action_values = (next_state_values * GAMMA) + rewards_tensor #shape(BATCH_SIZE)
 
         # Compute Huber loss

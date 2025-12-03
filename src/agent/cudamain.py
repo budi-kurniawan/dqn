@@ -36,7 +36,7 @@ if __name__ == "__main__":
         "cpu"
     )
     #device = torch.device("cpu")
-    seed = 42
+    seed = 1
     env = CartpoleEnv(seed, device)
     random.seed(seed)
     torch.manual_seed(seed)
