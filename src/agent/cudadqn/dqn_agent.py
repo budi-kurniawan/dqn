@@ -84,7 +84,7 @@ class DQNAgent:
             terminated = row[10].unsqueeze(0) #shape(BATCH_SIZE)
             terminated = 1 == terminated
             transition = Transition(state, action, next_state, reward, terminated)
-            # print('state:', state.shape, state)
+            #print('state:', state.shape, state)
             # print('action:', action.shape, action)
             # print('next_s:', next_state.shape, next_state)
             # print('reward:', reward.shape, reward)
@@ -99,10 +99,9 @@ class DQNAgent:
         batch = Transition(*zip(*transitions))
 
 
-        #converts tuples of len(BATCH_SIZE) to Tensors
-        state_batch = torch.cat(batch.state) #Shape(BATCH_SIZE, n_observations)
-        action_batch = torch.cat(batch.action).unsqueeze(1) #Shape(BATCH_SIZE, 1)
-        reward_batch = torch.cat(batch.reward) #Shape(BATCH_SIZE)
+        state_batch = tensor2d[:, 0:4] #shape(BATCH_SIZE, 4)
+        action_batch = tensor2d[:, 4].int().unsqueeze(1) #Shape(BATCH_SIZE, 1)
+        reward_batch = tensor2d[:, 9] #shape(BATCH_SIZE)
         terminated_batch = torch.cat(batch.terminated)
 
         # Compute a mask of non-final states and concatenate the batch elements
