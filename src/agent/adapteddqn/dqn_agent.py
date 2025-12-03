@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import random
-import math
+from torch import Tensor
 from agent.dqn.dqn import DQN
 from agent.adapteddqn.replay_memory import ReplayMemory, Transition
 
@@ -32,22 +31,18 @@ class DQNAgent:
         self._steps_done = 0
 
 
-    def select_action(self, observation):
-        state = torch.tensor(observation, dtype=torch.float32, device=self._device).unsqueeze(0) #state tensor [1,4]
-        sample = random.random()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-            math.exp(-1. * self._steps_done / EPS_DECAY)
+    def select_action(self, state: Tensor) -> Tensor:
+        state = state.unsqueeze(0) # convert shape(4) to (1,4)
+        sample = torch.rand(1, device=self._device).squeeze() #shape([])
+        exponent_term = torch.exp(torch.tensor(-1.) * self._steps_done / EPS_DECAY)
+        eps_threshold = EPS_END + (EPS_START - EPS_END) * exponent_term # shape([])
+        # TODO: change _steps_done to tensor
         self._steps_done += 1
-        if sample > eps_threshold:
-            with torch.no_grad():
-                # t.max(1) will return the largest column value of each row.
-                # second column on max result is index of where max element was
-                # found, so we pick action with the larger expected reward.
-                return self._policy_net(state).max(1).indices.view(1, 1).item()
-        else:
-            return torch.tensor([[self._env.action_space.sample()]], device=self._device, dtype=torch.long).item()
-            #random_action = np.random.randint(0, self._n_actions, dtype=np.int64)
-            #return torch.tensor([[random_action]], device=self._device, dtype=torch.long)
+        #self._steps_done.add_(1)
+        with torch.no_grad():
+            greedy_action = self._policy_net(state).max(1).indices #shape(1)
+        random_action = self._env.action_space.sample() #shape(1)
+        return torch.where(sample > eps_threshold, greedy_action, random_action).flatten()
 
 
     def update(self, state, action, next_state, reward, terminated, truncated):

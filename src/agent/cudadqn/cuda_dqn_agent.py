@@ -33,7 +33,7 @@ class CudaDQNAgent:
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
 
 
-    def select_action(self, state: Tensor):
+    def select_action(self, state: Tensor) -> Tensor:
         state = state.unsqueeze(0) # convert shape(4) to (1,4)
         #sample = random.random()
         sample = torch.rand(1, device=self._device).squeeze() #shape([])

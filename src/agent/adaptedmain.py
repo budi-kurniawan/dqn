@@ -15,21 +15,21 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device):
     episode_durations = []
 
     for i_episode in range(num_episodes):
-        state = env.reset() # observation is tuple [4]
+        state = env.reset()
         state = state.cpu().tolist()
 
         for t in count():
-            action = dqn_agent.select_action(state)
-            action = torch.tensor(action, dtype=torch.int32)
+            action = dqn_agent.select_action(torch.tensor(state, dtype=torch.float32, device=device))
+            #action = torch.tensor(action, dtype=torch.int32)
             next_state, reward, terminated, truncated = env.step(action)
 
             # print('reward:', reward.shape, reward)
-            # print('terminated:', terminated.shape, terminated)
-            # print('truncated:', truncated.shape, truncated)
+            # print("next_state0:", next_state)
             next_state = next_state.cpu().tolist()
+            # print("next_state:", next_state)
             reward = reward.item()
-            terminated = terminated.item()
-            truncated = truncated.item()
+            terminated = terminated.item() #shape[1] to list
+            truncated = truncated.item() #shape[1] to list
 
             # next_state = numpy.ndarray, reward: float
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     n_actions = env.action_space.n
     state = env.reset()
     n_observations = len(state) #4
-    num_episodes = 100
+    num_episodes = 500
     dqn_agent = DQNAgent(n_observations, n_actions, env, device)
     
 
