@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch import Tensor
 from agent.dqn.dqn import DQN
-from agent.adapteddqn.replay_memory import ReplayMemory, Transition
+from agent.cudadqn.replay_memory import ReplayMemory, Transition
 
 
 BATCH_SIZE = 128
@@ -27,7 +27,7 @@ class DQNAgent:
         self._target_net.load_state_dict(self._policy_net.state_dict())
         # with seed 42, setting amsgrad=True improves the results
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
-        self._memory = ReplayMemory(10000)
+        self._memory = ReplayMemory(device, 10000)
         self._steps_done = 0
 
 
@@ -53,7 +53,7 @@ class DQNAgent:
         state = torch.tensor(state, dtype=torch.float32, device=self._device).unsqueeze(0) #convert to shape[1,4]
         next_state = torch.tensor(next_state, dtype=torch.float32, device=self._device).unsqueeze(0) #to shape[1,4]
 
-        self._memory.push(state, action, next_state, reward, terminated)
+        self._memory.push(state, action, next_state, reward, terminated.float())
 
         self.optimize_model()
 
@@ -73,7 +73,26 @@ class DQNAgent:
         target_net = self._target_net
         optimizer = self._optimizer
 
-        transitions = memory.sample(BATCH_SIZE)
+        tensor2d = memory.sample(BATCH_SIZE)
+        rows = [row for row in tensor2d]
+        transitions = []
+        for row in rows:
+            state = row[0:4].unsqueeze(0) #shape(BATCH_SIZE, 4)
+            action = row[4].int().unsqueeze(0) #shape(BATCH_SIZE, 1) 
+            next_state = row[5:9].unsqueeze(0) #shape(BATCH_SIZE, 4)
+            reward = row[9].int().unsqueeze(0) #shape(BATCH_SIZE)
+            terminated = row[10].unsqueeze(0) #shape(BATCH_SIZE)
+            terminated = 1 == terminated
+            transition = Transition(state, action, next_state, reward, terminated)
+            # print('state:', state.shape, state)
+            # print('action:', action.shape, action)
+            # print('next_s:', next_state.shape, next_state)
+            # print('reward:', reward.shape, reward)
+            # print('termianted:', terminated.shape, terminated)
+            transitions.append(transition)
+
+
+        #transitions = memory.sample(BATCH_SIZE)
         # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
         # detailed explanation). This converts batch-array of Transitions
         # to Transition of batch-arrays.
