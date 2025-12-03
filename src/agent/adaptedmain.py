@@ -22,10 +22,14 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device):
             action = dqn_agent.select_action(state)
             action = torch.tensor(action, dtype=torch.int32)
             next_state, reward, terminated, truncated = env.step(action)
+
+            # print('reward:', reward.shape, reward)
+            # print('terminated:', terminated.shape, terminated)
+            # print('truncated:', truncated.shape, truncated)
             next_state = next_state.cpu().tolist()
             reward = reward.item()
-            terminated = (terminated != 0).item()
-            truncated = (truncated != 0).item()
+            terminated = terminated.item()
+            truncated = truncated.item()
 
             # next_state = numpy.ndarray, reward: float
             dqn_agent.update(state, action, next_state, reward, terminated, truncated)

@@ -32,15 +32,10 @@ class CartpoleEnv:
         # Logical OR is performed on the GPU
         terminated_bool_tensor = torch.logical_or(x_terminated, theta_terminated)
         
-        # Final conversion to float (1.0 or 0.0) is performed on the GPU
-        terminated_float = terminated_bool_tensor.float()
-
         # reward = 1 if not terminated, 0 if terminated
-        reward = (self._one_tensor - terminated_float).view(1)
-        terminated_float = terminated_float.view(1)
-
-        truncated = (self._steps_done >= self._max_steps_tensor).float().view(1)
-        return state, reward, terminated_float, truncated
+        reward = (self._one_tensor - terminated_bool_tensor.float()).view(1)
+        truncated = self._steps_done >= self._max_steps_tensor
+        return state, reward, terminated_bool_tensor.view(1), truncated.view(1)
 
 
 
