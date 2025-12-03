@@ -23,3 +23,9 @@ Make sure you have a pyproject.toml
 From the project root, run
     pip install -e .
     python -m agent.main
+
+# Variants
+- dqn: adaptation from PyTorch website where Transition contains tensors
+- dqn2: adaptation from dqn where Transition contains Numpy's ndarrays and DQNAgent's optimize_model() avoids tensor operations
+- cudadqn: uses CudaCartpole, run using cudamain.py
+- adaptedmain.py, uses AdaptedCartpoleEnv

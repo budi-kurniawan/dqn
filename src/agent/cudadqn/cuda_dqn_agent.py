@@ -28,7 +28,6 @@ class CudaDQNAgent:
         self._policy_net = DQN(n_observations, n_actions).to(device)
         self._target_net = DQN(n_observations, n_actions).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
-        # with seed 42, setting amsgrad=True improves the results and make it reproducible
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
         self._memory = CudaReplayMemory(device, 10000)
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
