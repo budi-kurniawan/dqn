@@ -30,12 +30,16 @@ class CartpoleEnv:
         theta_terminated = abs_state[2] > self._THETA_THRESHOLD_TENSOR
         
         # Logical OR is performed on the GPU
-        terminated_bool_tensor = torch.logical_or(x_terminated, theta_terminated)
+        terminated = torch.logical_or(x_terminated, theta_terminated) # tensor of bools
         
         # reward = 1 if not terminated, 0 if terminated
-        reward = (self._one_tensor - terminated_bool_tensor.float()).view(1)
+        reward = (self._one_tensor - terminated.float()).view(1)
         truncated = self._steps_done >= self._max_steps_tensor
-        return state, reward, terminated_bool_tensor.view(1), truncated.view(1)
+        # state: shape([4])
+        # reward: shape([1])
+        # terminated.view(1): shape([1])
+        # truncated.view(1): shape([1])
+        return state, reward, terminated.view(1), truncated.view(1)
 
 
 

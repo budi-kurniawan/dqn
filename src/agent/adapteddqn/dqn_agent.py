@@ -45,11 +45,14 @@ class DQNAgent:
         return torch.where(sample > eps_threshold, greedy_action, random_action).flatten()
 
 
-    def update(self, state, action, next_state, reward, terminated: Tensor, truncated):
-        state = torch.tensor(state, dtype=torch.float32, device=self._device).unsqueeze(0)
-        reward = torch.tensor([reward], device=self._device)
-        next_state = torch.tensor(next_state, dtype=torch.float32, device=self._device).unsqueeze(0)
-        action = torch.tensor([action], dtype=torch.int32, device=self._device)
+    def update(self, state, action, next_state, reward, terminated: Tensor, truncated: Tensor):
+        # next_state: shape([4])
+        # reward: shape([1])
+        # terminated.view(1): shape([1])
+        # truncated.view(1): shape([1])
+        state = torch.tensor(state, dtype=torch.float32, device=self._device).unsqueeze(0) #convert to shape[1,4]
+        next_state = torch.tensor(next_state, dtype=torch.float32, device=self._device).unsqueeze(0) #to shape[1,4]
+
         self._memory.push(state, action, next_state, reward, terminated)
 
         self.optimize_model()
@@ -82,7 +85,6 @@ class DQNAgent:
         action_batch = torch.cat(batch.action).unsqueeze(1) #Shape(BATCH_SIZE, 1)
         reward_batch = torch.cat(batch.reward) #Shape(BATCH_SIZE)
         terminated_batch = torch.cat(batch.terminated)
-        #next_state_batch = torch.cat(batch.next_state)
 
         # Compute a mask of non-final states and concatenate the batch elements
         # (a final state would've been the one after which simulation ended)
