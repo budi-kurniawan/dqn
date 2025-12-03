@@ -28,7 +28,7 @@ def train_dqn(env, dqn_agent, num_episodes: int, seed: int, device):
             next_state = next_state.cpu().tolist()
             # print("next_state:", next_state)
             reward = reward.item()
-            terminated = terminated.item() #shape[1] to list
+            #terminated = terminated.item() #shape[1] to list
             truncated = truncated.item() #shape[1] to list
 
             # next_state = numpy.ndarray, reward: float
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     n_actions = env.action_space.n
     state = env.reset()
     n_observations = len(state) #4
-    num_episodes = 500
+    num_episodes = 100
     dqn_agent = DQNAgent(n_observations, n_actions, env, device)
     
 

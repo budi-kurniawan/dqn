@@ -45,17 +45,13 @@ class DQNAgent:
         return torch.where(sample > eps_threshold, greedy_action, random_action).flatten()
 
 
-    def update(self, state, action, next_state, reward, terminated, truncated):
+    def update(self, state, action, next_state, reward, terminated: Tensor, truncated):
         state = torch.tensor(state, dtype=torch.float32, device=self._device).unsqueeze(0)
         reward = torch.tensor([reward], device=self._device)
         next_state = torch.tensor(next_state, dtype=torch.float32, device=self._device).unsqueeze(0)
         action = torch.tensor([action], dtype=torch.int32, device=self._device)
-        if terminated:
-            self._memory.push(state, action, None, reward)
-        else:
-            self._memory.push(state, action, next_state, reward)
+        self._memory.push(state, action, next_state, reward, terminated)
 
-        # Perform one step of the optimization (on the policy network)
         self.optimize_model()
 
         # Soft update of the target network's weights
@@ -80,19 +76,19 @@ class DQNAgent:
         # to Transition of batch-arrays.
         batch = Transition(*zip(*transitions))
 
-        # Compute a mask of non-final states and concatenate the batch elements
-        # (a final state would've been the one after which simulation ended)
-        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                            batch.next_state)), device=self._device, dtype=torch.bool)
-        # non_final_mask.shape = Size(128) of bools
-        non_final_next_states = torch.cat([s for s in batch.next_state 
-                                           if s is not None]) #shape([x, 4]), x <= BATCH_SIZE
 
         #converts tuples of len(BATCH_SIZE) to Tensors
         state_batch = torch.cat(batch.state) #Shape(BATCH_SIZE, n_observations)
         action_batch = torch.cat(batch.action).unsqueeze(1) #Shape(BATCH_SIZE, 1)
         reward_batch = torch.cat(batch.reward) #Shape(BATCH_SIZE)
+        terminated_batch = torch.cat(batch.terminated)
+        #next_state_batch = torch.cat(batch.next_state)
 
+        # Compute a mask of non-final states and concatenate the batch elements
+        # (a final state would've been the one after which simulation ended)
+        non_final_mask = terminated_batch == 0 #Shape(128) of bools
+        all_next_states = torch.cat(batch.next_state) # Shape (BATCH_SIZE, 4)
+        non_final_next_states = all_next_states[non_final_mask] # #shape([x, 4]), x <= BATCH_SIZE
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
@@ -120,7 +116,6 @@ class DQNAgent:
         # Optimize the model
         optimizer.zero_grad()
         loss.backward()
-        # In-place gradient clipping
         torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
         optimizer.step()
 
