@@ -27,5 +27,5 @@ From the project root, run
 # Variants
 - dqn: adaptation from PyTorch website where Transition contains tensors
 - dqn2: adaptation from dqn where Transition contains Numpy's ndarrays and DQNAgent's optimize_model() avoids tensor operations
-- cudadqn: uses CudaCartpole, run using cudamain.py
-- adaptedmain.py, uses AdaptedCartpoleEnv
+- torchdqn: uses TorchCartpole and Torch tensors throughout, run using torchmain.py
+- mtorchdqn.py, A variant of torchdqn that allows multiple environments

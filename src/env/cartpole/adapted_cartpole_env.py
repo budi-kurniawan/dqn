@@ -1,10 +1,10 @@
 import torch
 from torch import Tensor, device
-from env.cartpole.cartpole import Cartpole, X_THRESHOLD, THETA_THRESHOLD
-from env.cartpole.custom_discrete import CustomDiscrete
-from env.cartpole.cartpole_env import CartpoleEnv
+from env.cartpole.torch_cartpole import TorchCartpole, X_THRESHOLD, THETA_THRESHOLD
+from env.cartpole.torch_custom_discrete import TorchCustomDiscrete
+from env.cartpole.cartpole_env import TorchCartpoleEnv
 
-class AdaptedCartpoleEnv(CartpoleEnv):
+class AdaptedCartpoleEnv(TorchCartpoleEnv):
     """
         Class for testing tensor-based CartpoleEnv with DQNAgent that takes Python types
     """

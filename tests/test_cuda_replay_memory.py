@@ -5,8 +5,8 @@ import unittest
 
 import torch
 import torch.nn as nn
-from agent.cudadqn.cuda_replay_memory import CudaReplayMemory
-from env.cartpole.cartpole import Cartpole
+from agent.torchdqn.torch_replay_memory import TorchReplayMemory
+from env.cartpole.cartpole import TorchCartpole
 import random
 
 
@@ -25,7 +25,7 @@ class TestPrintDQNParams(unittest.TestCase):
         #random.seed(seed)
         #torch.manual_seed(seed)
 
-        replay_memory = CudaReplayMemory(device, capacity)
+        replay_memory = TorchReplayMemory(device, capacity)
         # replay_memory.push(torch.ones((11)))
         # print("size:", replay_memory.size)
 
@@ -46,7 +46,7 @@ class TestPrintDQNParams(unittest.TestCase):
         print("device:", device)
         seed = 42
 
-        cartpole = Cartpole(seed, device)
+        cartpole = TorchCartpole(seed, device)
         state = cartpole.reset()
         action = torch.tensor(1)
         cartpole.apply_action(action)

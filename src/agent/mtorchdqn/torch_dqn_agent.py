@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch import Tensor
 from agent.dqn.dqn import DQN
-from agent.cudadqn.cuda_replay_memory import CudaReplayMemory
-
+from agent.torchdqn.torch_replay_memory import TorchReplayMemory
 
 BATCH_SIZE = 128
 GAMMA = 0.99
@@ -14,7 +13,7 @@ EPS_DECAY = 2500
 TAU = 0.005
 LR = 3e-4
 
-class CudaDQNAgent:
+class TorchDQNAgent:
     criterion = nn.SmoothL1Loss()
 
     def __init__(self, n_observations, n_actions, env, device):
@@ -26,7 +25,7 @@ class CudaDQNAgent:
         self._target_net.load_state_dict(self._policy_net.state_dict())
         # with seed 42, setting amsgrad=True improves the results
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
-        self._memory = CudaReplayMemory(device, 10000)
+        self._memory = TorchReplayMemory(device, 10000)
         self._steps_done = torch.tensor(0, device=device)
 
 
@@ -96,7 +95,7 @@ class CudaDQNAgent:
 
 
         # Compute Huber loss
-        loss = CudaDQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss = TorchDQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         optimizer.zero_grad()

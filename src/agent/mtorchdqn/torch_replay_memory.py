@@ -1,7 +1,6 @@
 import torch
 
-class CudaReplayMemory:
-
+class TorchReplayMemory:
     def __init__(self, device: torch.device, capacity: int):
         self._device = device
         self._capacity = capacity # must be int to keep sample() GPU-safe

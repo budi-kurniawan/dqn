@@ -1,18 +1,18 @@
 import torch
 from torch import Tensor, device
-from env.cartpole.cartpole import Cartpole, X_THRESHOLD, THETA_THRESHOLD
-from env.cartpole.custom_discrete import CustomDiscrete
+from env.cartpole.torch_cartpole import TorchCartpole, X_THRESHOLD, THETA_THRESHOLD
+from env.cartpole.torch_custom_discrete import TorchCustomDiscrete
 
-class CartpoleEnv:
+class TorchCartpoleEnv:
     
 
     MAX_STEPS = 500
 
     def __init__(self, seed: int, device: torch.device):
-        self.action_space = CustomDiscrete(2, device)
-        self._cartpole = Cartpole(seed, device)
+        self.action_space = TorchCustomDiscrete(2, device)
+        self._cartpole = TorchCartpole(seed, device)
         self._one_tensor = torch.tensor(1.0, device=device)
-        self._max_steps_tensor = torch.tensor(CartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
+        self._max_steps_tensor = torch.tensor(TorchCartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
         self._X_THRESHOLD_TENSOR = torch.tensor(X_THRESHOLD, device=device)
         self._THETA_THRESHOLD_TENSOR = torch.tensor(THETA_THRESHOLD, device=device)
