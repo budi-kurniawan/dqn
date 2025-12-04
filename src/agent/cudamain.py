@@ -55,7 +55,7 @@ if __name__ == "__main__":
     n_actions = env.action_space.n
     state = env.reset()
     n_observations = len(state) #4
-    num_episodes = 100
+    num_episodes = 500
     dqn_agent = CudaDQNAgent(n_observations, n_actions, env, device)
     
 
