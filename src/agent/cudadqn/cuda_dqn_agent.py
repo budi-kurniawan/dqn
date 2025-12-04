@@ -45,12 +45,7 @@ class CudaDQNAgent:
     def update(self, state, action, next_state, reward, terminated: Tensor, truncated: Tensor):
         # next_state: shape([4])
         # reward: shape([1])
-        # terminated.view(1): shape([1])
-        # truncated.view(1): shape([1])
-        state = torch.tensor(state, dtype=torch.float32, device=self._device).unsqueeze(0) #convert to shape[1,4]
-        next_state = torch.tensor(next_state, dtype=torch.float32, device=self._device).unsqueeze(0) #to shape[1,4]
-
-        self._memory.push(state, action, next_state, reward, terminated.float())
+        self._memory.push(state.unsqueeze(0), action, next_state.unsqueeze(0), reward, terminated.float())
 
         self.optimize_model()
 
