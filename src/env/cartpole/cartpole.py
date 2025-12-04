@@ -1,6 +1,4 @@
 import math
-import random
-from typing import List
 import torch
 from torch import Tensor
 
@@ -29,7 +27,6 @@ class Cartpole:
         self._device = device
         # state represents x, x_dot, theta, theta_dot
         self._state = torch.zeros(4, dtype=torch.float32, device=self._device)
-        self._rng: random.Random = random.Random(seed)
         self._G = torch.tensor(GRAVITY, device=device, dtype=torch.float32)
         self._TOTAL_MASS = torch.tensor(TOTAL_MASS, device=device, dtype=torch.float32)
         self._POLEMASS_LENGTH = torch.tensor(POLEMASS_LENGTH, device=device, dtype=torch.float32)
@@ -60,4 +57,4 @@ class Cartpole:
         # self._state[3] += self._TAU * theta_acc # theta_dot += TAU * theta_acc
         derivatives = torch.stack((x_dot, x_acc.squeeze().squeeze(), theta_dot, theta_acc.squeeze().squeeze()))
         self._state.add_(self._TAU * derivatives)
-        return self._state
+        return self._state #shape[4]
