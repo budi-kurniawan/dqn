@@ -5,7 +5,7 @@ Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'terminated'))
 
 
-class ReplayMemory(object):
+class CudaReplayMemory:
 
     def __init__(self, device: torch.device, capacity: int):
         self._device = device

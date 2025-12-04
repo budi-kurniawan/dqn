@@ -1,9 +1,7 @@
 import random
 from itertools import count
-
 import torch
-
-from agent.cudadqn.dqn_agent import DQNAgent
+from agent.cudadqn.cuda_dqn_agent import CudaDQNAgent
 from env.cartpole.cartpole_env import CartpoleEnv
 from util.plot_util import plot_timesteps
 import os
@@ -58,7 +56,7 @@ if __name__ == "__main__":
     state = env.reset()
     n_observations = len(state) #4
     num_episodes = 100
-    dqn_agent = DQNAgent(n_observations, n_actions, env, device)
+    dqn_agent = CudaDQNAgent(n_observations, n_actions, env, device)
     
 
     print("device:", device)
