@@ -15,6 +15,7 @@ class MTorchCartpoleEnv:
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
         self._X_THRESHOLD_TENSOR = torch.tensor(X_THRESHOLD, device=device)
         self._THETA_THRESHOLD_TENSOR = torch.tensor(THETA_THRESHOLD, device=device)
+        self._rewards = torch.tensor([0], device=device)
 
     def reset(self) -> Tensor:
         self._steps_done.zero_()
@@ -32,4 +33,6 @@ class MTorchCartpoleEnv:
         # reward = 1 if not terminated, 0 if terminated
         reward = (~terminated).float() #(self._one_tensor - terminated.float()).view(1)
         truncated = self._steps_done >= self._max_steps_tensor
-        return state, reward, terminated, truncated #shape(n_envs,4), (n_envs), (n_envs), (n_envs)
+        randoms = self._cartpole.generate_random_tensor()
+        # TODO if done, push steps_done to rewards
+        return state, reward, terminated, truncated, randoms #shape(n_envs,4), (n_envs), (n_envs), (n_envs)

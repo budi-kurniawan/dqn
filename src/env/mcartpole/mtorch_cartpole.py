@@ -39,7 +39,7 @@ class MTorchCartpole:
 
     def reset(self) -> Tensor:
         # Generates 4 float32 between -0.05 and 0.05 (rand() returns a number between 0 and 1)
-        self._state = torch.rand((self._n_envs, 4), device=self._device).sub_(.5).mul_(.1)
+        self._state = self.generate_random_tensor()
         return self._state #shape(n_envs, 4)
     
     def apply_action(self, actions: Tensor) -> Tensor: #action shape(n_envs)
@@ -60,3 +60,8 @@ class MTorchCartpole:
         updates.mul_(self._TAU)
         self._state.add_(updates.T)
         return self._state #shape[n_envs, 4]
+    
+    def generate_random_tensor(self):
+        # Generates 4 float32 between -0.05 and 0.05 (rand() returns a number between 0 and 1)
+        return torch.rand((self._n_envs, 4), device=self._device).sub_(.5).mul_(.1)
+

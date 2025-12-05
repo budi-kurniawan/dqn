@@ -17,14 +17,12 @@ def train_dqn(env, agent, num_episodes: int, device, n_envs):
     state = env.reset() #shape(n_envs, n_observations)
     for i_step in range(n_steps):
         #state = state[0] # TODO, select_action needs to take 2-dim tensor
-        action = agent.select_action(state[0])
+        action = agent.select_action(state[0]) #state will be random if done
         action = action.repeat(n_envs) #TODO, remove this
-        next_state, reward, terminated, truncated = env.step(action)
+        next_state, reward, terminated, truncated, randoms = env.step(action)
         agent.update(state, action, next_state, reward, terminated, truncated)
-        # if torch.logical_or(terminated, truncated): #TODO move this to env.step()
-        #     break
-        print("step:", i_step)
-        state = next_state.clone() # must clone, else state and next_state will point to same tensor in agent.update()
+        done = torch.logical_or(terminated, truncated)
+        state = torch.where(done.unsqueeze(1), randoms, next_state.clone()) # must clone next_state, else state and next_state will point to same tensor in agent.update()
     return episode_durations      
 
 
