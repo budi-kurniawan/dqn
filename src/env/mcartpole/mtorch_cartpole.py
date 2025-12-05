@@ -19,12 +19,13 @@ GRAVITY: float = 9.8
 TAU: float = 0.02  # Time step (e.g., 50 FPS)
 FOUR_THIRDS: float = 4.0 / 3.0
 
-class Cartpole:
+class MTorchCartpole:
     """
-    Represents the CartPole environment simulation.
+    Represents the CartPole environment simulation developed using Torch and support multiple envs.
     """
-    def __init__(self, seed: int, device: torch.device):
+    def __init__(self, device: torch.device, n_envs: int = 1):
         self._device = device
+        self._n_envs = n_envs
         # state represents x, x_dot, theta, theta_dot
         self._state = torch.zeros(4, dtype=torch.float32, device=self._device)
         self._G = torch.tensor(GRAVITY, device=device, dtype=torch.float32)
@@ -38,12 +39,12 @@ class Cartpole:
 
     def reset(self) -> Tensor:
         # Generates 4 float32 between -0.05 and 0.05 (rand() returns a number between 0 and 1)
-        self._state = torch.rand(4, device=self._device).sub_(.5).mul_(.1)
-        return self._state
+        self._state = torch.rand((self._n_envs, 4), device=self._device).sub_(.5).mul_(.1)
+        return self._state #shape(n_envs, 4)
     
-    def apply_action(self, action: Tensor):
-        x, x_dot, theta, theta_dot = self._state
-        force = self._FORCE_MAG[action]
+    def apply_action(self, actions: Tensor) -> Tensor: #action shape(n_envs)
+        x, x_dot, theta, theta_dot = self._state.T #transpose enables unpacking
+        force = self._FORCE_MAG[actions]
         cos_theta = torch.cos(theta)
         sin_theta = torch.sin(theta)
         temp = (force + self._POLEMASS_LENGTH * theta_dot.pow(2) * sin_theta) / self._TOTAL_MASS
@@ -55,6 +56,7 @@ class Cartpole:
         # self._state[1] += self._TAU * x_acc     # x_dot += TAU * x_acc
         # self._state[2] += self._TAU * theta_dot # theta += TAU * theta_dot
         # self._state[3] += self._TAU * theta_acc # theta_dot += TAU * theta_acc
-        derivatives = torch.stack((x_dot, x_acc.squeeze().squeeze(), theta_dot, theta_acc.squeeze().squeeze()))
-        self._state.add_(self._TAU * derivatives)
-        return self._state #shape[4]
+        updates = torch.stack((x_dot, x_acc.squeeze().squeeze(), theta_dot, theta_acc.squeeze().squeeze()))
+        updates.mul_(self._TAU)
+        self._state.add_(updates.T)
+        return self._state #shape[n_envs, 4]

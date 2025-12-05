@@ -6,7 +6,7 @@ import unittest
 import torch
 import torch.nn as nn
 from agent.torchdqn.torch_replay_memory import TorchReplayMemory
-from env.cartpole.cartpole import TorchCartpole
+from env.cartpole.torch_cartpole import TorchCartpole
 import random
 
 

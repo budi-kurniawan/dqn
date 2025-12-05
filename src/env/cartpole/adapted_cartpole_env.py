@@ -2,7 +2,7 @@ import torch
 from torch import Tensor, device
 from env.cartpole.torch_cartpole import TorchCartpole, X_THRESHOLD, THETA_THRESHOLD
 from env.cartpole.torch_custom_discrete import TorchCustomDiscrete
-from env.cartpole.cartpole_env import TorchCartpoleEnv
+from env.cartpole.torch_cartpole_env import TorchCartpoleEnv
 
 class AdaptedCartpoleEnv(TorchCartpoleEnv):
     """

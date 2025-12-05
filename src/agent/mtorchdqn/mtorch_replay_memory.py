@@ -1,6 +1,6 @@
 import torch
 
-class TorchReplayMemory:
+class MTorchReplayMemory:
     def __init__(self, device: torch.device, capacity: int):
         self._device = device
         self._capacity = capacity # must be int to keep sample() GPU-safe
@@ -8,7 +8,6 @@ class TorchReplayMemory:
         self._pointer = torch.tensor(0, dtype=torch.int32, device=device)
         self._size = torch.tensor(0, dtype=torch.int32, device=device)
         self._memory = torch.zeros((capacity, length), dtype=torch.float32, device=device) 
-        #self._flag = torch.tensor([1.0], device=device, dtype=torch.float32)
 
     def push(self, state, action, next_state, reward, terminated_float):
         row = torch.cat((state.squeeze(), action, next_state.squeeze(), reward, terminated_float))

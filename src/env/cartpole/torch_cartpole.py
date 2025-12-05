@@ -55,6 +55,7 @@ class TorchCartpole:
         # self._state[1] += self._TAU * x_acc     # x_dot += TAU * x_acc
         # self._state[2] += self._TAU * theta_dot # theta += TAU * theta_dot
         # self._state[3] += self._TAU * theta_acc # theta_dot += TAU * theta_acc
-        derivatives = torch.stack((x_dot, x_acc.squeeze().squeeze(), theta_dot, theta_acc.squeeze().squeeze()))
-        self._state.add_(self._TAU * derivatives)
+        updates = torch.stack((x_dot, x_acc.squeeze().squeeze(), theta_dot, theta_acc.squeeze().squeeze()))
+        updates.mul_(self._TAU) #shape(4)
+        self._state.add_(updates)
         return self._state #shape[4]

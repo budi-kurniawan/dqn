@@ -13,12 +13,13 @@ EPS_DECAY = 2500
 TAU = 0.005
 LR = 3e-4
 
-class TorchDQNAgent:
+class MTorchDQNAgent:
     criterion = nn.SmoothL1Loss()
 
-    def __init__(self, n_observations, n_actions, env, device):
+    def __init__(self, n_observations, n_actions, env, device, n_envs: int):
         self._env = env
         self._device = device
+        self._nenvs = n_envs
         self._n_actions = n_actions
         self._policy_net = DQN(n_observations, n_actions).to(device)
         self._target_net = DQN(n_observations, n_actions).to(device)
@@ -95,7 +96,7 @@ class TorchDQNAgent:
 
 
         # Compute Huber loss
-        loss = TorchDQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss = MTorchDQNAgent.criterion(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         optimizer.zero_grad()

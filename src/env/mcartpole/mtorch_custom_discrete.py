@@ -1,6 +1,6 @@
 import torch
 
-class CustomDiscrete:
+class MTorchCustomDiscrete:
     """
     A minimal class that mimics the gymnasium.spaces.Discrete functionality 
     to support the .sample() method.
