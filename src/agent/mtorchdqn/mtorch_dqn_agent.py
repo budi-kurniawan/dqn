@@ -19,19 +19,20 @@ class MTorchDQNAgent:
     def __init__(self, n_observations, n_actions, env, device, n_envs: int):
         self._env = env
         self._device = device
-        self._nenvs = n_envs
+        self._n_envs = n_envs
         self._n_actions = n_actions
+        # the number of floats per env
+        self._row_length = 4 + 1 + 4 + 1 + 1  # state, action, next_state, reward, terminated
         self._policy_net = DQN(n_observations, n_actions).to(device)
         self._target_net = DQN(n_observations, n_actions).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
         # with seed 42, setting amsgrad=True improves the results
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
-        self._memory = MTorchReplayMemory(device, 10000, n_envs)
+        self._memory = MTorchReplayMemory(device, 10000, self._row_length, n_envs)
         self._steps_done = torch.tensor(0, device=device)
 
 
     def select_action(self, state: Tensor) -> Tensor:
-        state = state.unsqueeze(0) # convert shape(4) to (1,4)
         exponent_term = torch.exp(-1. * self._steps_done / EPS_DECAY)
         eps_threshold = EPS_END + (EPS_START - EPS_END) * exponent_term # shape([])
         self._steps_done.add_(1)
@@ -66,11 +67,14 @@ class MTorchDQNAgent:
         optimizer = self._optimizer
 
         samples = memory.sample(BATCH_SIZE)
+        samples = samples.view(BATCH_SIZE, self._n_envs, self._row_length)
+        samples = samples.view(-1, self._row_length)
+
         state_batch = samples[:, 0:4] #shape(BATCH_SIZE, 4)
         action_batch = samples[:, 4].int().unsqueeze(1) #Shape(BATCH_SIZE, 1)
+        next_state_batch = samples[:, 5:9] #shape(BATCH_SIZE, 4)
         reward_batch = samples[:, 9] #shape(BATCH_SIZE)
         terminated_batch = samples[:, 10] 
-        next_state_batch = samples[:, 5:9] #shape(BATCH_SIZE, 4)
 
         non_final_mask = terminated_batch == 0 #Shape(128) of bools
         non_final_next_states = next_state_batch[non_final_mask] # #shape([x, 4]), x <= BATCH_SIZE
@@ -86,7 +90,7 @@ class MTorchDQNAgent:
         # on the "older" target_net; selecting their best reward with max(1).values
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
-        next_state_values = torch.zeros(BATCH_SIZE, device=self._device) #shape(BATCH_SIZE)
+        next_state_values = torch.zeros(self._n_envs * BATCH_SIZE, device=self._device) #shape(BATCH_SIZE)
         with torch.no_grad():
             next_state_values[non_final_mask] = target_net(non_final_next_states).max(1).values
             # non_final_next_states.size = next_state_values.size - non_final_mask(False)

@@ -1,15 +1,17 @@
 import torch
 
 class MTorchReplayMemory:
-    def __init__(self, device: torch.device, capacity: int, n_envs: int):
+
+
+    def __init__(self, device: torch.device, capacity: int, row_length:int, n_envs: int):
         self._device = device
         self._capacity = capacity # must be int to keep sample() GPU-safe
-        length = 4 + 1 + 4 + 1 + 1  # state, action, next_state, reward, terminated
-        self._length = length
+        #length = 4 + 1 + 4 + 1 + 1  # state, action, next_state, reward, terminated
+        self._length = row_length
         self._n_envs = n_envs
         self._pointer = torch.tensor(0, dtype=torch.int32, device=device)
         self._size = torch.tensor(0, dtype=torch.int32, device=device)
-        self._memory = torch.zeros((capacity, length * n_envs), dtype=torch.float32, device=device) 
+        self._memory = torch.zeros((capacity, row_length * n_envs), dtype=torch.float32, device=device) 
 
     def push(self, state, action, next_state, reward, terminated_float):
         # state, next_state: shape(n_envs,4)

@@ -16,9 +16,8 @@ def train_dqn(env, agent, num_episodes: int, device, n_envs):
 
     state = env.reset() #shape(n_envs, n_observations)
     for i_step in range(n_steps):
-        #state = state[0] # TODO, select_action needs to take 2-dim tensor
-        action = agent.select_action(state[0]) #state will be random if done
-        action = action.repeat(n_envs) #TODO, remove this
+        # state already reset on terminal either at the first iteration or in the Env
+        action = agent.select_action(state)
         next_state, reward, terminated, truncated = env.step(action)
         agent.update(state, action, next_state, reward, terminated, truncated)
         state = next_state.clone() # must clone next_state, else state and next_state will point to same tensor in agent.update()
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 2
+    n_envs = 3
     env = MTorchCartpoleEnv(device, n_envs)
     torch.manual_seed(seed)
     #env.action_space.seed(seed)

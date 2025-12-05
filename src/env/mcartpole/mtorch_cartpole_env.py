@@ -9,7 +9,7 @@ class MTorchCartpoleEnv:
 
     def __init__(self, device: torch.device, n_envs: int):
         self._n_envs = n_envs
-        self.action_space = MTorchCustomDiscrete(2, device)
+        self.action_space = MTorchCustomDiscrete(2, device, n_envs)
         self._cartpole = MTorchCartpole(device, n_envs)
         self._max_steps_tensor = torch.tensor(MTorchCartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
