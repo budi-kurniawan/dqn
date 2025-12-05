@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch import Tensor
 from agent.dqn.dqn import DQN
-from agent.torchdqn.torch_replay_memory import TorchReplayMemory
+from agent.mtorchdqn.mtorch_replay_memory import MTorchReplayMemory
 
 BATCH_SIZE = 128
 GAMMA = 0.99
@@ -26,7 +26,7 @@ class MTorchDQNAgent:
         self._target_net.load_state_dict(self._policy_net.state_dict())
         # with seed 42, setting amsgrad=True improves the results
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
-        self._memory = TorchReplayMemory(device, 10000)
+        self._memory = MTorchReplayMemory(device, 10000, n_envs)
         self._steps_done = torch.tensor(0, device=device)
 
 
@@ -43,9 +43,9 @@ class MTorchDQNAgent:
 
 
     def update(self, state, action, next_state, reward, terminated: Tensor, truncated: Tensor):
-        # next_state: shape([4])
-        # reward: shape([1])
-        self._memory.push(state.unsqueeze(0), action, next_state.unsqueeze(0), reward, terminated.float())
+        # state, next_state: shape(n_envs,4)
+        # reward, action, terminated: shape(n_envs)
+        self._memory.push(state, action, next_state, reward, terminated.float())
 
         self.optimize_model()
 

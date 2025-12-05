@@ -3,8 +3,7 @@ from torch import Tensor
 from env.mcartpole.mtorch_cartpole import MTorchCartpole, X_THRESHOLD, THETA_THRESHOLD
 from env.mcartpole.mtorch_custom_discrete import MTorchCustomDiscrete
 
-class MTorchCartpoleEnv:
-    
+class MTorchCartpoleEnv:    
 
     MAX_STEPS = 500
 
@@ -12,12 +11,10 @@ class MTorchCartpoleEnv:
         self._n_envs = n_envs
         self.action_space = MTorchCustomDiscrete(2, device)
         self._cartpole = MTorchCartpole(device, n_envs)
-        self._one_tensor = torch.tensor(1.0, device=device)
         self._max_steps_tensor = torch.tensor(MTorchCartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
         self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
         self._X_THRESHOLD_TENSOR = torch.tensor(X_THRESHOLD, device=device)
         self._THETA_THRESHOLD_TENSOR = torch.tensor(THETA_THRESHOLD, device=device)
-
 
     def reset(self) -> Tensor:
         self._steps_done.zero_()
@@ -32,16 +29,7 @@ class MTorchCartpoleEnv:
         
         # Logical OR is performed on the GPU
         terminated = torch.logical_or(x_terminated, theta_terminated) # bool tensor of shape[n_envs]
-        print('terminated:', terminated)
         # reward = 1 if not terminated, 0 if terminated
-        reward = (self._one_tensor - terminated.float()).view(1)
+        reward = (~terminated).float() #(self._one_tensor - terminated.float()).view(1)
         truncated = self._steps_done >= self._max_steps_tensor
-        # state: shape([4])
-        # reward: shape([1])
-        # terminated.view(1): shape([1])
-        # truncated.view(1): shape([1])
-        print("step. state:", state, ", reward:", reward)
-        return state, reward, terminated.view(1), truncated.view(1)
-
-
-
+        return state, reward, terminated, truncated #shape(n_envs,4), (n_envs), (n_envs), (n_envs)

@@ -12,20 +12,19 @@ os.system('cls' if os.name == 'nt' else 'clear')
 def train_dqn(env, agent, num_episodes: int, device, n_envs):
     episode_durations = []
 
-    for i_episode in range(num_episodes):
-        state = env.reset() #shape(n_envs, n_observations)
-        for t in count():
-            state = state[0] # TODO, select_action needs to take 2-dim tensor
-            action = agent.select_action(state)
-            action = action.repeat(n_envs) #TODO, remove this
-            next_state, reward, terminated, truncated = env.step(action)
-            # next_state: shape([4]), reward: shape([1])
-            agent.update(state, action, next_state, reward, terminated, truncated)
-            if torch.logical_or(terminated, truncated):
-                episode_durations.append(t + 1)
-                print("episode ", i_episode + 1, ", reward: ", t + 1)
-                break
-            state = next_state.clone() # must clone, else state and next_state will point to same tensor in agent.update()
+    n_steps = 10_000
+
+    state = env.reset() #shape(n_envs, n_observations)
+    for i_step in range(n_steps):
+        #state = state[0] # TODO, select_action needs to take 2-dim tensor
+        action = agent.select_action(state[0])
+        action = action.repeat(n_envs) #TODO, remove this
+        next_state, reward, terminated, truncated = env.step(action)
+        agent.update(state, action, next_state, reward, terminated, truncated)
+        # if torch.logical_or(terminated, truncated): #TODO move this to env.step()
+        #     break
+        print("step:", i_step)
+        state = next_state.clone() # must clone, else state and next_state will point to same tensor in agent.update()
     return episode_durations      
 
 
