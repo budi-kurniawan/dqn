@@ -34,5 +34,8 @@ class MTorchCartpoleEnv:
         reward = (~terminated).float() #(self._one_tensor - terminated.float()).view(1)
         truncated = self._steps_done >= self._max_steps_tensor
         randoms = self._cartpole.generate_random_tensor()
+        done = torch.logical_or(terminated, truncated)
+        state = torch.where(done.unsqueeze(1), randoms, state) # reset here
+
         # TODO if done, push steps_done to rewards
-        return state, reward, terminated, truncated, randoms #shape(n_envs,4), (n_envs), (n_envs), (n_envs)
+        return state, reward, terminated, truncated #shape(n_envs,4), (n_envs), (n_envs), (n_envs)
