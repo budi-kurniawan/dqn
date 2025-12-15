@@ -12,17 +12,17 @@ class MTorchCartpoleEnv:
         self.action_space = MTorchCustomDiscrete(2, device, n_envs)
         self._cartpole = MTorchCartpole(device, n_envs)
         self._max_steps_tensor = torch.tensor(MTorchCartpoleEnv.MAX_STEPS, device=device, dtype=torch.int32)
-        self._steps_done = torch.tensor(0, device=device, dtype=torch.int32)
+        self._steps_done = torch.zeros(n_envs, device=device, dtype=torch.int32) #shape(n_envs), dtype is needed otherwise it will be float32
         self._X_THRESHOLD_TENSOR = torch.tensor(X_THRESHOLD, device=device)
         self._THETA_THRESHOLD_TENSOR = torch.tensor(THETA_THRESHOLD, device=device)
-        self._rewards = torch.tensor([0], device=device)
+        self._rewards = torch.tensor([], device=device, dtype=torch.int32)
 
     def reset(self) -> Tensor:
         self._steps_done.zero_()
         return self._cartpole.reset() #shape(n_envs, n_observations)
 
     def step(self, action: torch) -> Tensor:
-        self._steps_done.add_(self._n_envs)
+        self._steps_done.add_(1)
         state: Tensor = self._cartpole.apply_action(action) #state shape(n_envs, 4)
         abs_state = state.abs()
         x_terminated = abs_state[:, 0] > self._X_THRESHOLD_TENSOR
@@ -33,9 +33,15 @@ class MTorchCartpoleEnv:
         # reward = 1 if not terminated, 0 if terminated
         reward = (~terminated).float() #(self._one_tensor - terminated.float()).view(1)
         truncated = self._steps_done >= self._max_steps_tensor
-        randoms = self._cartpole.generate_random_tensor()
         done = torch.logical_or(terminated, truncated)
+
+        # if done, push steps_done for terminated/truncated envs to rewards and reset state
+        randoms = self._cartpole.generate_random_tensor()
         state = torch.where(done.unsqueeze(1), randoms, state) # reset here
 
-        # TODO if done, push steps_done to rewards
+        self._rewards = torch.cat((self._rewards, self._steps_done[done]), dim=0)
+        self._steps_done[done] = 0 # zero steps_done of terminated/truncated envs
         return state, reward, terminated, truncated #shape(n_envs,4), (n_envs), (n_envs), (n_envs)
+
+    def get_rewards(self) -> Tensor:
+        return self._rewards

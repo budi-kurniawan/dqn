@@ -9,19 +9,19 @@ import time
 
 os.system('cls' if os.name == 'nt' else 'clear')
 
+# TODO use pinned memory to optimise
 def train_dqn(env, agent, num_episodes: int, device, n_envs):
-    episode_durations = []
-
-    n_steps = 10_000
+    n_steps = 1_000
 
     state = env.reset() #shape(n_envs, n_observations)
     for i_step in range(n_steps):
-        # state already reset on terminal either at the first iteration or in the Env
         action = agent.select_action(state)
+        # next_state already reset on terminal either at the first iteration or in env.step()
+        # do not call reset() in this for loop
         next_state, reward, terminated, truncated = env.step(action)
         agent.update(state, action, next_state, reward, terminated, truncated)
         state = next_state.clone() # must clone next_state, else state and next_state will point to same tensor in agent.update()
-    return episode_durations      
+    return env.get_rewards()      
 
 
 if __name__ == "__main__":
@@ -49,6 +49,7 @@ if __name__ == "__main__":
     print("device:", device)
     start = time.time()
     results = train_dqn(env, dqn_agent, num_episodes, device, n_envs)
+    print("results:", len(results), results)
     end = time.time()
     print("Total rewards:", sum(results))
     print(f"Execution time: {end - start:.4f} seconds")
