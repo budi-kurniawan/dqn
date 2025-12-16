@@ -16,7 +16,7 @@ def train_dqn(env, agent, num_episodes: int, device, n_envs):
     state = env.reset() #shape(n_envs, n_observations)
     for i_step in range(n_steps):
         action = agent.select_action(state)
-        # next_state already reset on terminal either at the first iteration or in env.step()
+        # state already reset on terminal either at the first iteration or in env.step()
         # do not call reset() in this for loop
         next_state, reward, terminated, truncated = env.step(action)
         agent.update(state, action, next_state, reward, terminated, truncated)

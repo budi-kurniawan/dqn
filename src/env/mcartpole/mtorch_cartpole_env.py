@@ -36,8 +36,7 @@ class MTorchCartpoleEnv:
         done = torch.logical_or(terminated, truncated)
 
         # if done, push steps_done for terminated/truncated envs to rewards and reset state
-        randoms = self._cartpole.generate_random_tensor()
-        state = torch.where(done.unsqueeze(1), randoms, state) # reset here
+        state = self._cartpole.reset_done_elements(done) 
 
         self._rewards = torch.cat((self._rewards, self._steps_done[done]), dim=0)
         self._steps_done[done] = 0 # zero steps_done of terminated/truncated envs
