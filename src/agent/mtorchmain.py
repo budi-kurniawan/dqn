@@ -30,10 +30,10 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 200
-    mem_capacity = 20_000
+    n_envs = 100
+    mem_capacity = 5_000
     env = MTorchCartpoleEnv(device, n_envs)
-    n_steps = 100_000
+    n_steps = 10_000
     torch.manual_seed(seed)
     #env.action_space.seed(seed)
     #env.observation_space.seed(seed)
