@@ -16,7 +16,7 @@ LR = 3e-4
 class MTorchDQNAgent:
     criterion = nn.SmoothL1Loss()
 
-    def __init__(self, n_observations, n_actions, env, device, n_envs: int):
+    def __init__(self, n_observations, n_actions, env, device, n_envs: int, mem_capacity: int = 10000):
         self._env = env
         self._device = device
         self._n_envs = n_envs
@@ -28,7 +28,7 @@ class MTorchDQNAgent:
         self._target_net.load_state_dict(self._policy_net.state_dict())
         # with seed 42, setting amsgrad=True improves the results
         self._optimizer = optim.AdamW(self._policy_net.parameters(), lr=LR, amsgrad=True)
-        self._memory = MTorchReplayMemory(device, 10000, self._row_length, n_envs)
+        self._memory = MTorchReplayMemory(device, mem_capacity, self._row_length, n_envs)
         self._steps_done = torch.tensor(0, device=device)
 
 

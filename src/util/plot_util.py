@@ -36,11 +36,15 @@ def plot_timesteps(episode_durations, show_result=False):
     plt.ioff()
     plt.show()
 
-def plot_simple(data_list: list, x_label="episode", y_label="reward") -> None: 
-    title = "Results mean=" + str(data_list.mean().item()) + ", max=" + str(data_list.max().item()) + ", min=" + str(data_list.min().item())
+def plot_simple(data: list, x_label="episode", y_label="reward") -> None: 
+    min_value = torch.min(data).item()
+    max_value = torch.max(data).item()
+    mean_value = round(torch.mean(data.float()).item(), 2)
+    print("shape:", data.shape)
+    title = "Results mean=" + str(mean_value) + ", min=" + str(min_value) + ", max=" + str(max_value)
     print("title:", title)
     plt.figure(figsize=(10, 5))
-    plt.plot(data_list)
+    plt.plot(data)
     
     # Set labels and title
     plt.title(title)

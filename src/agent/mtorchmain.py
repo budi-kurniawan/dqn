@@ -10,9 +10,7 @@ import time
 os.system('cls' if os.name == 'nt' else 'clear')
 
 # TODO use pinned memory to optimise
-def train_dqn(env, agent, num_episodes: int, device, n_envs):
-    n_steps = 10_000
-
+def train_dqn(env, agent, n_steps):
     state = env.reset() #shape(n_envs, n_observations)
     for i_step in range(n_steps):
         action = agent.select_action(state)
@@ -32,8 +30,10 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 15
+    n_envs = 200
+    mem_capacity = 20_000
     env = MTorchCartpoleEnv(device, n_envs)
+    n_steps = 100_000
     torch.manual_seed(seed)
     #env.action_space.seed(seed)
     #env.observation_space.seed(seed)
@@ -42,13 +42,10 @@ if __name__ == "__main__":
     n_actions = env.action_space.n
     state = env.reset()
     n_observations = len(state[0]) #4, state is 2-dim, so we need the length of a row
-    num_episodes = 10
-    dqn_agent = MTorchDQNAgent(n_observations, n_actions, env, device, n_envs)
-    
-
+    dqn_agent = MTorchDQNAgent(n_observations, n_actions, env, device, n_envs, mem_capacity)
     print("device:", device)
     start = time.time()
-    results = train_dqn(env, dqn_agent, num_episodes, device, n_envs)
+    results = train_dqn(env, dqn_agent, n_steps)
     print("results:", len(results), results)
     end = time.time()
     print("Total rewards:", sum(results))
