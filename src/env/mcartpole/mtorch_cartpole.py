@@ -45,6 +45,7 @@ class MTorchCartpole:
     def reset_done_elements(self, done: Tensor) -> None :
         randoms = self.generate_random_tensor()
         self._state = torch.where(done.unsqueeze(1), randoms, self._state) # reset here
+        return self._state
 
     
     def apply_action(self, actions: Tensor) -> Tensor: #action shape(n_envs)

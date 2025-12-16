@@ -1,4 +1,5 @@
 import matplotlib
+#matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import torch
 
@@ -35,3 +36,20 @@ def plot_timesteps(episode_durations, show_result=False):
     plt.ioff()
     plt.show()
 
+def plot_simple(data_list: list, x_label="episode", y_label="reward") -> None: 
+    title = "Results mean=" + str(data_list.mean().item()) + ", max=" + str(data_list.max().item()) + ", min=" + str(data_list.min().item())
+    print("title:", title)
+    plt.figure(figsize=(10, 5))
+    plt.plot(data_list)
+    
+    # Set labels and title
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    
+    # Add a grid for better readability
+    plt.grid(True, linestyle='--', alpha=0.6)
+    
+    # Display the plot
+    #plt.show()
+    plt.savefig("results/mtorch-rewards.png")   

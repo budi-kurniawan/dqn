@@ -3,7 +3,7 @@ import torch
 
 from agent.mtorchdqn.mtorch_dqn_agent import MTorchDQNAgent
 from env.mcartpole.mtorch_cartpole_env import MTorchCartpoleEnv
-from util.plot_util import plot_timesteps
+from util.plot_util import plot_timesteps, plot_simple
 import os
 import time
 
@@ -11,7 +11,7 @@ os.system('cls' if os.name == 'nt' else 'clear')
 
 # TODO use pinned memory to optimise
 def train_dqn(env, agent, num_episodes: int, device, n_envs):
-    n_steps = 1_000
+    n_steps = 10_000
 
     state = env.reset() #shape(n_envs, n_observations)
     for i_step in range(n_steps):
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 3
+    n_envs = 15
     env = MTorchCartpoleEnv(device, n_envs)
     torch.manual_seed(seed)
     #env.action_space.seed(seed)
@@ -53,6 +53,6 @@ if __name__ == "__main__":
     end = time.time()
     print("Total rewards:", sum(results))
     print(f"Execution time: {end - start:.4f} seconds")
-    draw_chart = False
+    draw_chart = True
     if draw_chart:
-        plot_timesteps(results, True)
+        plot_simple(results.cpu())
