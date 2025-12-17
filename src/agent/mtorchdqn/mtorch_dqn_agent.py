@@ -5,7 +5,7 @@ from torch import Tensor
 from agent.dqn.dqn import DQN
 from agent.mtorchdqn.mtorch_replay_memory import MTorchReplayMemory
 
-BATCH_SIZE = 128
+#BATCH_SIZE = 128
 GAMMA = 0.99
 EPS_START = 0.9
 EPS_END = 0.01
@@ -16,11 +16,12 @@ LR = 3e-4
 class MTorchDQNAgent:
     criterion = nn.SmoothL1Loss()
 
-    def __init__(self, n_observations, n_actions, env, device, n_envs: int, mem_capacity: int = 10000):
+    def __init__(self, n_observations, n_actions, env, device, n_envs: int, mem_capacity: int, batch_size: int):
         self._env = env
         self._device = device
         self._n_envs = n_envs
         self._n_actions = n_actions
+        self._batch_size = batch_size
         # the number of floats per env
         self._row_length = 4 + 1 + 4 + 1 + 1  # state, action, next_state, reward, terminated
         self._policy_net = DQN(n_observations, n_actions).to(device)
@@ -60,14 +61,14 @@ class MTorchDQNAgent:
     
     def optimize_model(self):
         memory = self._memory
-        if len(memory) < BATCH_SIZE:
+        if len(memory) < self._batch_size:
             return
         policy_net = self._policy_net
         target_net = self._target_net
         optimizer = self._optimizer
 
-        samples = memory.sample(BATCH_SIZE)
-        samples = samples.view(BATCH_SIZE, self._n_envs, self._row_length)
+        samples = memory.sample(self._batch_size)
+        samples = samples.view(self._batch_size, self._n_envs, self._row_length)
         samples = samples.view(-1, self._row_length)
 
         state_batch = samples[:, 0:4] #shape(BATCH_SIZE, 4)
@@ -90,7 +91,7 @@ class MTorchDQNAgent:
         # on the "older" target_net; selecting their best reward with max(1).values
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
-        next_state_values = torch.zeros(self._n_envs * BATCH_SIZE, device=self._device) #shape(BATCH_SIZE)
+        next_state_values = torch.zeros(self._n_envs * self._batch_size, device=self._device) #shape(BATCH_SIZE)
         with torch.no_grad():
             next_state_values[non_final_mask] = target_net(non_final_next_states).max(1).values
             # non_final_next_states.size = next_state_values.size - non_final_mask(False)

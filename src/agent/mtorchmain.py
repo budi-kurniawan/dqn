@@ -30,10 +30,12 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 100
-    mem_capacity = 5_000
+    n_envs = 10
+    mem_capacity = 500
+    batch_size = 32
+    n_steps = 8_000
+
     env = MTorchCartpoleEnv(device, n_envs)
-    n_steps = 10_000
     torch.manual_seed(seed)
     #env.action_space.seed(seed)
     #env.observation_space.seed(seed)
@@ -42,12 +44,13 @@ if __name__ == "__main__":
     n_actions = env.action_space.n
     state = env.reset()
     n_observations = len(state[0]) #4, state is 2-dim, so we need the length of a row
-    dqn_agent = MTorchDQNAgent(n_observations, n_actions, env, device, n_envs, mem_capacity)
+    dqn_agent = MTorchDQNAgent(n_observations, n_actions, env, device, n_envs, mem_capacity, batch_size)
     print("device:", device)
     start = time.time()
     results = train_dqn(env, dqn_agent, n_steps)
-    print("results:", len(results), results)
     end = time.time()
+    print("#episodes:", len(results))
+    print(results)
     print("Total rewards:", sum(results))
     print(f"Execution time: {end - start:.4f} seconds")
     draw_chart = True
