@@ -30,10 +30,10 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 10
-    mem_capacity = 500
+    n_envs = 20
+    mem_capacity = 1000
     batch_size = 32
-    n_steps = 8_000
+    n_steps = 6_000
 
     env = MTorchCartpoleEnv(device, n_envs)
     torch.manual_seed(seed)
