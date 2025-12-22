@@ -17,6 +17,7 @@ def train_dqn(env, agent, n_steps):
         # state already reset on terminal either at the first iteration or in env.step()
         # do not call reset() in this for loop
         next_state, reward, terminated, truncated = env.step(action)
+        # agent.update costs about 70% of this loop
         agent.update(state, action, next_state, reward, terminated, truncated)
         state = next_state.clone() # must clone next_state, else state and next_state will point to same tensor in agent.update()
     return env.get_rewards()      
@@ -30,10 +31,10 @@ if __name__ == "__main__":
     )
     #device = torch.device("cpu")
     seed = 1
-    n_envs = 20
+    n_envs = 30
     mem_capacity = 1000
     batch_size = 32
-    n_steps = 6_000
+    n_steps = 4_000
 
     env = MTorchCartpoleEnv(device, n_envs)
     torch.manual_seed(seed)
