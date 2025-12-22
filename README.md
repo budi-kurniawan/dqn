@@ -24,6 +24,9 @@ From the project root, run
     pip install -e .
     python -m agent.main
 
+# GPU Profiling
+    nvidia-smi dmon -s uc
+
 # Variants
 - dqn: adaptation from PyTorch website where Transition contains tensors
 - dqn2: adaptation from dqn where Transition contains Numpy's ndarrays and DQNAgent's optimize_model() avoids tensor operations

@@ -3,16 +3,26 @@ import torch
 
 from agent.mtorchdqn.mtorch_dqn_agent import MTorchDQNAgent
 from env.mcartpole.mtorch_cartpole_env import MTorchCartpoleEnv
-from util.plot_util import plot_timesteps, plot_simple
+from util.plot_util import plot_timesteps, plot_simple, plot_with_torch
 import os
 import time
 
 os.system('cls' if os.name == 'nt' else 'clear')
 
 # TODO use pinned memory to optimise
-def train_dqn(env, agent, n_steps):
+def train_dqn(env, agent, n_steps, batch_size):
     state = env.reset() #shape(n_envs, n_observations)
-    for i_step in range(n_steps):
+    # two loops removes if in optimize_model and improve performance by 0.5%
+    for i_step in range(batch_size):
+        action = agent.select_action(state)
+        # state already reset on terminal either at the first iteration or in env.step()
+        # do not call reset() in this for loop
+        next_state, reward, terminated, truncated = env.step(action)
+        # agent.update costs about 70% of this loop
+        agent.update_without_optimize(state, action, next_state, reward, terminated, truncated)
+        state = next_state.clone() # must clone next_state, else state and next_state will point to same tensor in agent.update()
+
+    for i_step in range(n_steps - batch_size):
         action = agent.select_action(state)
         # state already reset on terminal either at the first iteration or in env.step()
         # do not call reset() in this for loop
@@ -48,7 +58,7 @@ if __name__ == "__main__":
     dqn_agent = MTorchDQNAgent(n_observations, n_actions, env, device, n_envs, mem_capacity, batch_size)
     print("device:", device)
     start = time.time()
-    results = train_dqn(env, dqn_agent, n_steps)
+    results = train_dqn(env, dqn_agent, n_steps, batch_size)
     end = time.time()
     print("#episodes:", len(results))
     print(results)
@@ -56,4 +66,5 @@ if __name__ == "__main__":
     print(f"Execution time: {end - start:.4f} seconds")
     draw_chart = True
     if draw_chart:
-        plot_simple(results.cpu())
+        #plot_simple(results.cpu())
+        plot_with_torch(results)

@@ -43,6 +43,17 @@ class MTorchDQNAgent:
         random_action = self._env.action_space.sample() #shape(1)
         return torch.where(sample > eps_threshold, greedy_action, random_action).flatten()
 
+    def update_without_optimize(self, state, action, next_state, reward, terminated: Tensor, truncated: Tensor):
+        self._memory.push(state, action, next_state, reward, terminated.float())
+
+        # Soft update of the target network's weights
+        # θ′ ← τ θ + (1 −τ )θ′
+        target_net_state_dict = self._target_net.state_dict()
+        policy_net_state_dict = self._policy_net.state_dict()
+        for key in policy_net_state_dict:
+            target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+        self._target_net.load_state_dict(target_net_state_dict)
+
 
     def update(self, state, action, next_state, reward, terminated: Tensor, truncated: Tensor):
         # state, next_state: shape(n_envs,4)
@@ -59,10 +70,11 @@ class MTorchDQNAgent:
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
         self._target_net.load_state_dict(target_net_state_dict)
     
+    # will not be called when len(memory) < self._batch_size
     def optimize_model(self):
         memory = self._memory
-        if len(memory) < self._batch_size:
-            return
+        # if len(memory) < self._batch_size:
+        #     return
         policy_net = self._policy_net
         target_net = self._target_net
         optimizer = self._optimizer
@@ -106,7 +118,7 @@ class MTorchDQNAgent:
         # Optimize the model
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
+        #torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
         optimizer.step()
 
     def get_policy_net(self):
